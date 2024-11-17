@@ -2,35 +2,89 @@
 @MINE_POKEMON_LIST
 #DIM ポケモンリストナンバー
 #DIM 文字空白数
+#DIM ページナンバー
+#DIM FIRST_LINE
 ポケモンリストナンバー = 0
 文字空白数 = 0
 
+
+$SHOW_LOOP
+DRAWLINE
+;PRINT これ空欄空列？なくなる
+PRINTFORML 
+
+ポケモンリストナンバー = 0
+
 FOR LOCAL:0, 0, CHARANUM
-    IF TALENT:(LOCAL:0):ポケモン
-        STRLENS CALLNAME:(LOCAL:0)
-        文字空白数 = 20 - (RESULT:0)
-        FOR (LOCAL:1), 0, 文字空白数
-            LOCALS:0 += " "
-        NEXT    
-        ;PRINTFORML {RESULT:0}
-        IF ポケモンリストナンバー < 10
-            LOCALS:1 += "  "
-        ELSEIF ポケモンリストナンバー < 100
-            LOCALS:1 += " "
+        IF TALENT:(LOCAL:0):ポケモン
+            ポケモンリストナンバー ++
+            IF (ポケモンリストナンバー <= ((ページナンバー + 1)*30)) && (ポケモンリストナンバー > ((ページナンバー)*30))
+                STRLENS CALLNAME:(LOCAL:0)
+                文字空白数 = 20 - (RESULT:0)
+                FOR (LOCAL:1), 0, 文字空白数
+                    LOCALS:0 += " "
+                NEXT    
+                ;PRINTFORML {RESULT:0}
+                IF ポケモンリストナンバー < 10
+                    LOCALS:1 += "  "
+                ELSEIF ポケモンリストナンバー < 100
+                    LOCALS:1 += " "
+                ENDIF
+                PRINTBUTTON "["+TOSTR(ポケモンリストナンバー)+LOCALS:1+"]"+ CALLNAME:(LOCAL:0),ポケモンリストナンバー
+                PRINTFORM %LOCALS:0%
+                LOCALS:0 = 
+                LOCALS:1 = 
+            ENDIF
         ENDIF
-        PRINTBUTTON "["+TOSTR(ポケモンリストナンバー)+LOCALS:1+"]"+ CALLNAME:(LOCAL:0),ポケモンリストナンバー
-        PRINTFORM %LOCALS:0%
-        LOCALS:0 = 
-        LOCALS:1 = 
-        ポケモンリストナンバー ++
-    ENDIF    
 NEXT
 
-INPUT
+;IF FIRST_LINE != 1
 
-IF RESULT == 999
-    RETURN
+;PRINTL 
+PRINTFORML 
+PRINTFORML 
+
+    DRAWLINE
+;    FIRST_LINE = 1
+;ELSE
+;ENDIF
+
+IF ページナンバー > 0
+	PRINTBUTTON "[7777] 前のページ", 7777
+ELSE
+    PRINTFORM %TOSTR_SPACE(17)%
+ENDIF
+PRINTFORM %TOSTR_SPACE(20)%
+PRINTFORM 現在のページ{ページナンバー}
+PRINTFORM %TOSTR_SPACE(20)%
+
+IF ページナンバー < 9
+	PRINTBUTTON "[8888] 次のページ", 8888
+ELSE
+
 ENDIF
 
+PRINTFORML 
+PRINTFORM %TOSTR_SPACE(37)%
+PRINTBUTTON "[9999] もどる", 9999
+
+$INPUT_LOOP
+INPUT
+
+IF RESULT == 9999
+    RETURN
+ELSEIF RESULT == 8888
+    ページナンバー += 1
+    CLEARLINE LINECOUNT - FIRST_LINE
+    GOTO SHOW_LOOP
+ELSEIF RESULT == 7777
+    ページナンバー -= 1
+    CLEARLINE LINECOUNT - FIRST_LINE
+    GOTO SHOW_LOOP
+ELSE
+    GOTO INPUT_LOOP
+ENDIF
+
+;GOTO SHOW_LOOP
 
 
