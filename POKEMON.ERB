@@ -1,0 +1,36 @@
+﻿
+@MINE_POKEMON_LIST
+#DIM ポケモンリストナンバー
+#DIM 文字空白数
+ポケモンリストナンバー = 0
+文字空白数 = 0
+
+FOR LOCAL:0, 0, CHARANUM
+    IF TALENT:(LOCAL:0):ポケモン
+        STRLENS CALLNAME:(LOCAL:0)
+        文字空白数 = 20 - (RESULT:0)
+        FOR (LOCAL:1), 0, 文字空白数
+            LOCALS:0 += " "
+        NEXT    
+        ;PRINTFORML {RESULT:0}
+        IF ポケモンリストナンバー < 10
+            LOCALS:1 += "  "
+        ELSEIF ポケモンリストナンバー < 100
+            LOCALS:1 += " "
+        ENDIF
+        PRINTBUTTON "["+TOSTR(ポケモンリストナンバー)+LOCALS:1+"]"+ CALLNAME:(LOCAL:0),ポケモンリストナンバー
+        PRINTFORM %LOCALS:0%
+        LOCALS:0 = 
+        LOCALS:1 = 
+        ポケモンリストナンバー ++
+    ENDIF    
+NEXT
+
+INPUT
+
+IF RESULT == 999
+    RETURN
+ENDIF
+
+
+
