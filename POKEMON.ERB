@@ -4,6 +4,8 @@
 #DIM 文字空白数
 #DIM ページナンバー
 #DIM FIRST_LINE
+#DIM 入力結果
+#DIM P_ID
 ポケモンリストナンバー = 0
 文字空白数 = 0
 
@@ -71,20 +73,233 @@ PRINTBUTTON "[9999] もどる", 9999
 $INPUT_LOOP
 INPUT
 
-IF RESULT == 9999
+入力結果 = RESULT
+
+IF 入力結果 == 9999
     RETURN
-ELSEIF RESULT == 8888
+ELSEIF 入力結果 == 8888
     ページナンバー += 1
     CLEARLINE LINECOUNT - FIRST_LINE
     GOTO SHOW_LOOP
-ELSEIF RESULT == 7777
+ELSEIF 入力結果 == 7777
     ページナンバー -= 1
     CLEARLINE LINECOUNT - FIRST_LINE
     GOTO SHOW_LOOP
+ELSEIF (入力結果 <= ((ページナンバー + 1)*30)) && (入力結果 > ((ページナンバー)*30))
+    CALL POKEMON_ID(入力結果)
+    P_ID = RESULT:0
+    CALL POKEMON_STATUS_DETAIL(P_ID)
 ELSE
     GOTO INPUT_LOOP
 ENDIF
 
 ;GOTO SHOW_LOOP
+
+@POKEMON_ID(対象ナンバー)
+#DIM ポケモンリストナンバー
+#DIM 対象ナンバー
+#DIM P_ID
+
+FOR LOCAL:0, 0, CHARANUM
+    IF TALENT:(LOCAL:0):ポケモン
+        ポケモンリストナンバー++
+        IF ポケモンリストナンバー == 対象ナンバー
+            P_ID = LOCAL:0
+        ENDIF
+    ENDIF
+NEXT
+
+PRINTFORML {P_ID}
+
+RETURN P_ID
+
+@POKEMON_TYPENAME(P_ID, 複合タイプ)
+#DIM P_ID
+#DIM 複合タイプ
+
+IF 複合タイプ == 0
+    IF TALENT:P_ID:タイプ1 == 1
+        LOCALS:0 = ノーマル
+    ELSEIF TALENT:P_ID:タイプ1 == 2
+        LOCALS:0 = ほのお
+    ELSEIF TALENT:P_ID:タイプ1 == 3
+        LOCALS:0 = みず
+    ELSEIF TALENT:P_ID:タイプ1 == 4
+        LOCALS:0 = でんき
+    ELSEIF TALENT:P_ID:タイプ1 == 5
+        LOCALS:0 = くさ
+    ELSEIF TALENT:P_ID:タイプ1 == 6
+        LOCALS:0 = こおり
+    ELSEIF TALENT:P_ID:タイプ1 == 7
+        LOCALS:0 = かくとう
+    ELSEIF TALENT:P_ID:タイプ1 == 8
+        LOCALS:0 = どく
+    ELSEIF TALENT:P_ID:タイプ1 == 9
+        LOCALS:0 = じめん
+    ELSEIF TALENT:P_ID:タイプ1 == 10
+        LOCALS:0 = ひこう
+    ELSEIF TALENT:P_ID:タイプ1 == 11
+        LOCALS:0 = エスパー
+    ELSEIF TALENT:P_ID:タイプ1 == 12
+        LOCALS:0 = むし
+    ELSEIF TALENT:P_ID:タイプ1 == 13
+        LOCALS:0 = いわ
+    ELSEIF TALENT:P_ID:タイプ1 == 14
+        LOCALS:0 = ゴースト
+    ELSEIF TALENT:P_ID:タイプ1 == 15
+        LOCALS:0 = ドラゴン
+    ELSEIF TALENT:P_ID:タイプ1 == 16
+        LOCALS:0 = あく
+    ELSEIF TALENT:P_ID:タイプ1 == 17
+        LOCALS:0 = はがね
+    ELSEIF TALENT:P_ID:タイプ1 == 18
+        LOCALS:0 = フェアリー
+    ELSE
+        LOCALS:0 = 
+    ENDIF
+ELSEIF 複合タイプ == 1
+    IF TALENT:P_ID:タイプ2 == 1
+        LOCALS:0 = ノーマル
+    ELSEIF TALENT:P_ID:タイプ2 == 2
+        LOCALS:0 = ほのお
+    ELSEIF TALENT:P_ID:タイプ2 == 3
+        LOCALS:0 = みず
+    ELSEIF TALENT:P_ID:タイプ2 == 4
+        LOCALS:0 = でんき
+    ELSEIF TALENT:P_ID:タイプ2 == 5
+        LOCALS:0 = くさ
+    ELSEIF TALENT:P_ID:タイプ2 == 6
+        LOCALS:0 = こおり
+    ELSEIF TALENT:P_ID:タイプ2 == 7
+        LOCALS:0 = かくとう
+    ELSEIF TALENT:P_ID:タイプ2 == 8
+        LOCALS:0 = どく
+    ELSEIF TALENT:P_ID:タイプ2 == 9
+        LOCALS:0 = じめん
+    ELSEIF TALENT:P_ID:タイプ2 == 10
+        LOCALS:0 = ひこう
+    ELSEIF TALENT:P_ID:タイプ2 == 11
+        LOCALS:0 = エスパー
+    ELSEIF TALENT:P_ID:タイプ2 == 12
+        LOCALS:0 = むし
+    ELSEIF TALENT:P_ID:タイプ2 == 13
+        LOCALS:0 = いわ
+    ELSEIF TALENT:P_ID:タイプ2 == 14
+        LOCALS:0 = ゴースト
+    ELSEIF TALENT:P_ID:タイプ2 == 15
+        LOCALS:0 = ドラゴン
+    ELSEIF TALENT:P_ID:タイプ2 == 16
+        LOCALS:0 = あく
+    ELSEIF TALENT:P_ID:タイプ2 == 17
+        LOCALS:0 = はがね
+    ELSEIF TALENT:P_ID:タイプ2 == 18
+        LOCALS:0 = フェアリー
+    ELSE
+        LOCALS:0 = 
+    ENDIF
+ENDIF
+
+RETURNFORM %LOCALS:0%
+
+@GET_PERSONALITY(P_ID)
+#FUNCTIONS
+#DIM P_ID
+
+SIF TALENT:P_ID:ポケモン性格 == 1
+    RETURNF さみしがり
+SIF TALENT:P_ID:ポケモン性格 == 2
+    RETURNF いじっぱり
+SIF TALENT:P_ID:ポケモン性格 == 3
+    RETURNF やんちゃ
+SIF TALENT:P_ID:ポケモン性格 == 4
+    RETURNF ゆうかん
+SIF TALENT:P_ID:ポケモン性格 == 5
+    RETURNF 図太い
+SIF TALENT:P_ID:ポケモン性格 == 6
+    RETURNF わんぱく
+SIF TALENT:P_ID:ポケモン性格 == 7
+    RETURNF 能天気
+SIF TALENT:P_ID:ポケモン性格 == 8
+    RETURNF 呑気
+SIF TALENT:P_ID:ポケモン性格 == 9
+    RETURNF 控えめ
+SIF TALENT:P_ID:ポケモン性格 == 10
+    RETURNF おっとり
+SIF TALENT:P_ID:ポケモン性格 == 11
+    RETURNF うっかりや
+SIF TALENT:P_ID:ポケモン性格 == 12
+    RETURNF れいせい
+SIF TALENT:P_ID:ポケモン性格 == 13
+    RETURNF 穏やか
+SIF TALENT:P_ID:ポケモン性格 == 14
+    RETURNF おとなしい
+SIF TALENT:P_ID:ポケモン性格 == 15
+    RETURNF 慎重
+SIF TALENT:P_ID:ポケモン性格 == 16
+    RETURNF 生意気
+SIF TALENT:P_ID:ポケモン性格 == 17
+    RETURNF 臆病
+SIF TALENT:P_ID:ポケモン性格 == 18
+    RETURNF せっかち
+SIF TALENT:P_ID:ポケモン性格 == 19
+    RETURNF 陽気
+SIF TALENT:P_ID:ポケモン性格 == 20
+    RETURNF 無邪気
+SIF TALENT:P_ID:ポケモン性格 == 21
+    RETURNF 頑張り屋
+SIF TALENT:P_ID:ポケモン性格 == 22
+    RETURNF 素直
+SIF TALENT:P_ID:ポケモン性格 == 23
+    RETURNF 照れ屋
+SIF TALENT:P_ID:ポケモン性格 == 24
+    RETURNF 気まぐれ
+SIF TALENT:P_ID:ポケモン性格 == 25
+    RETURNF 照れ屋
+
+@POKEMON_STATUS_DETAIL(P_ID)
+#DIM P_ID
+
+DRAWLINE
+
+PRINTFORML 名前：%CALLNAME:P_ID%
+PRINTFORML レベル：{BASE:P_ID:ポケモンLV}
+PRINTFORML 性別：
+IF TALENT:P_ID:性別 = 0
+PRINTFORM ♂
+ELSEIF TALENT:P_ID:性別 = 1
+PRINTFORM ♀
+ELSE
+ENDIF
+
+PRINTFORML タイプ１：
+CALL POKEMON_TYPENAME(P_ID, 0)
+PRINTFORM {RESULT:0}
+
+PRINTFORML タイプ２：
+CALL POKEMON_TYPENAME(P_ID, 1)
+PRINTFORM {RESULT:0}
+
+PRINTFORML 親：%CALLNAME:(TALENT:P_ID:ポケモン親)%
+
+PRINTFORML ID.{P_ID}
+
+PRINTFORML 現在の経験値：{BASE:P_ID:合計獲得経験値}
+
+PRINTFORML 性格：%GET_PERSONALITY(P_ID)%
+
+DRAWLINE
+
+PRINTFORML 
+PRINTFORM %TOSTR_SPACE(37)%
+PRINTBUTTON "[9999] もどる", 9999
+
+$INPUT_LOOP
+INPUT
+
+IF RESULT == 9999
+    RETURN
+ELSE
+    GOTO INPUT_LOOP
+ENDIF
 
 
