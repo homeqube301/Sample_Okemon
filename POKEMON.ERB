@@ -1,5 +1,7 @@
 ﻿
 @MINE_POKEMON_LIST
+;所持しているポケモンをポケモンボックスのように
+;1ページあたり30匹まで表示する関数、最大300までで
 #DIM ポケモンリストナンバー
 #DIM 文字空白数
 #DIM ページナンバー
@@ -96,6 +98,9 @@ ENDIF
 ;GOTO SHOW_LOOP
 
 @POKEMON_ID(対象ナンバー)
+;すべてのキャラリストからポケモンだけを抽出し
+;所持ポケモンの何番目にあたるポケモンか対象ナンバーに代入することで
+;目的ポケモンのキャラIDを抽出する関数
 #DIM ポケモンリストナンバー検証用
 #DIM 対象ナンバー
 #DIM P_ID
@@ -118,6 +123,7 @@ RETURN P_ID
 
 
 @POKEMON_TYPENAME1(P_ID)
+;目的ポケモンの持つ1つ目のタイプを文字列で返す関数
 #FUNCTIONS
 #DIM P_ID
     SIF TALENT:P_ID:タイプ1 == 1
@@ -160,6 +166,7 @@ RETURN P_ID
 RETURNF ARGS
 
 @POKEMON_TYPENAME2(P_ID)
+;目的ポケモンの持つ2つ目のタイプを文字列で返す関数
 #FUNCTIONS
 #DIM P_ID
     SIF TALENT:P_ID:タイプ2 == 1
@@ -202,6 +209,7 @@ RETURNF ARGS
 RETURNF ARGS
 
 @GET_PERSONALITYNAME(P_ID)
+;目的ポケモンの性格を文字列で返す関数
 #FUNCTIONS
 #DIM P_ID
 
@@ -259,6 +267,7 @@ SIF TALENT:P_ID:ポケモン性格 == 25
 RETURNF ARGS
 
 @POKEMON_STATUS_DETAIL(P_ID)
+;目的ポケモンの様々なステータスを表示する関数
 #DIM P_ID
 
 DRAWLINE
