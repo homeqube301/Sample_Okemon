@@ -292,6 +292,7 @@ PRINTFORML 　親　　　　：%CALLNAME:(TALENT:P_ID:ポケモン親)%
 PRINTFORML 　ID　　　　 .{P_ID}
 
 PRINTFORML 現在の経験値：{BASE:P_ID:合計獲得経験値}
+CALL POKEMON_LVUP(P_ID)
 
 PRINTFORML 　性　　格　：%GET_PERSONALITYNAME(P_ID)%
 
@@ -316,6 +317,7 @@ $INPUT_LOOP
 INPUT
 
 IF RESULT == 9999
+    CALL POKEMON_GET_EXPERIENCE(P_ID, P_ID+1)
     RETURN
 ELSE
     GOTO INPUT_LOOP
@@ -326,13 +328,16 @@ ENDIF
 #DIM P_ID2 ;相手のポケモン
 #DIM P_EXP
 #DIM レベル補正
-#DIM レベル補正結果
+#DIM レベル補正関係値
 
-;レベル補正 = (((2 * BASE:P_ID2:ポケモンLV) + 10)/((BASE:P_ID2:ポケモンLV + BASE:P_ID:ポケモンLV)+10))
+POWER レベル補正関係値, (100*((2 * BASE:P_ID2:ポケモンLV) + 10)/((BASE:P_ID2:ポケモンLV + BASE:P_ID:ポケモンLV)+10)), 2
+レベル補正 = (レベル補正関係値 * SQRT((100*((2 * BASE:P_ID2:ポケモンLV) + 10)/((BASE:P_ID2:ポケモンLV + BASE:P_ID:ポケモンLV)+10)))) / 10
 
-POWER レベル補正, (((2 * BASE:P_ID2:ポケモンLV) + 10)/((BASE:P_ID2:ポケモンLV + BASE:P_ID:ポケモンLV)+10)), (25/10)
+;IF レベル補正 == 0
 
-P_EXP = (((BASE:P_ID2:基礎経験値) * レベル補正)/2 + 1)
+PRINTFORML レベル補正は{レベル補正}だよーん
+
+P_EXP = (((BASE:P_ID2:基礎経験値) * レベル補正)/20000 + 1)
 
 BASE:P_ID:合計獲得経験値 += P_EXP
 PRINTFORML %CALLNAME:P_ID%は{P_EXP}の経験値を得た
@@ -344,23 +349,24 @@ CALL POKEMON_LVUP(P_ID)
 #DIM LEVEL1
 #DIM LEVEL2
 #DIM LEVEL3
+#DIM LEVEL4
+
+必要経験値 = 0
 
 LEVEL1 = BASE:P_ID:ポケモンLV
-POWER LEVEL2, (BASE:P_ID:ポケモンLV), 2
-POWER LEVEL3, (BASE:P_ID:ポケモンLV), 3
-
-SIF LEVEL1 == 1
-    必要経験値 = 1
+LEVEL4 = BASE:P_ID:ポケモンLV + 1
+POWER LEVEL2, (BASE:P_ID:ポケモンLV+1), 2
+POWER LEVEL3, (BASE:P_ID:ポケモンLV+1), 3
 
 IF TALENT:P_ID:経験値タイプ == 1
     IF LEVEL1 >= 2 && LEVEL1 < 50
-        必要経験値 =  (LEVEL3 * (100 - LEVEL1) / 50)
+        必要経験値 =  (LEVEL3 * (100 - LEVEL4) / 50)
     ELSEIF LEVEL1 >= 50 && LEVEL1 < 68
-        必要経験値 =  (LEVEL3 * (150 - LEVEL1) / 100)
+        必要経験値 =  (LEVEL3 * (150 - LEVEL4) / 100)
     ELSEIF LEVEL1 >= 68 && LEVEL1 < 98
-        必要経験値 =  (LEVEL3 * (637 - (10 * LEVEL1 /3)) / 500)    
+        必要経験値 =  (LEVEL3 * (637 - (10 * LEVEL4 /3)) / 500)    
     ELSEIF LEVEL1 >= 98 && LEVEL1 <= 100
-        必要経験値 =  (LEVEL3 * (160-LEVEL1) / 100)
+        必要経験値 =  (LEVEL3 * (160-LEVEL4) / 100)
     ENDIF
 
 ELSEIF TALENT:P_ID:経験値タイプ == 2
@@ -368,25 +374,31 @@ ELSEIF TALENT:P_ID:経験値タイプ == 2
 ELSEIF TALENT:P_ID:経験値タイプ == 3
     必要経験値 =  LEVEL3
 ELSEIF TALENT:P_ID:経験値タイプ == 4
-    必要経験値 =  ((LEVEL3 * 12 / 10) - (15 * LEVEL2) +(100 * LEVEL1) -140)
+    必要経験値 =  ((LEVEL3 * 12 / 10) - (15 * LEVEL2) +(100 * LEVEL4) -140)
 ELSEIF TALENT:P_ID:経験値タイプ == 5
     必要経験値 = LEVEL3 * 125 / 100    
 ELSEIF TALENT:P_ID:経験値タイプ == 6
     IF LEVEL1 >= 2 && LEVEL1 < 15
-        必要経験値 = (LEVEL3 * (24 +((LEVEL1 + 1) / 3)) / 50)
+        必要経験値 = (LEVEL3 * (24 +((LEVEL4 + 1) / 3)) / 50)
     ELSEIF LEVEL1 >= 15 && LEVEL1 < 36
-        必要経験値 = (LEVEL3 * (14 + LEVEL1) / 50)
+        必要経験値 = (LEVEL3 * (14 + LEVEL4) / 50)
     ELSEIF LEVEL1 >= 36 && LEVEL1 < 100
-        必要経験値 = (LEVEL3 * (32 +(LEVEL1 / 2)) / 50)
+        必要経験値 = (LEVEL3 * (32 +(LEVEL4 / 2)) / 50)
     ENDIF
 ENDIF
 
-SIF BASE:P_ID:合計獲得経験値 >= 必要経験値
+SIF LEVEL1 == 1
+    必要経験値 = 1
+
+
+IF BASE:P_ID:合計獲得経験値 >= 必要経験値
     BASE:P_ID:ポケモンLV += 1
     PRINTFORML %CALLNAME:P_ID%はレベルアップして、LV.{BASE:P_ID:ポケモンLV}になった！！
     CALL POKEMON_LVUP(P_ID)
+ELSE
+    PRINTFORML 次のレベルまで、あと{必要経験値 - BASE:P_ID:合計獲得経験値}
+ENDIF
 
-PRINTFORML 次のレベルまで、あと{必要経験値 - BASE:P_ID:合計獲得経験値}
 
 RETURN 必要経験値
 
@@ -409,5 +421,5 @@ ELSE
     
 ENDIF
 
-@SET_POKEMON_ENEMY_TRAINER(トレーナーCSV番号)
+;@SET_POKEMON_ENEMY_TRAINER(トレーナーCSV番号)
 
