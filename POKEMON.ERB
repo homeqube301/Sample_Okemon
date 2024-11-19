@@ -275,6 +275,7 @@ PRINTFORML
 
 PRINTFORML 　名　　前　：%CALLNAME:P_ID%
 PRINTFORML 　レベル　　：{BASE:P_ID:ポケモンLV}
+PRINTFORML 　図鑑No.　　{TALENT:P_ID:全国図鑑No}
 PRINTFORM 　性　　別　：
 IF TALENT:P_ID:性別 == 0
 	PRINTFORML ♂
@@ -331,11 +332,11 @@ ENDIF
 
 POWER レベル補正, (((2 * BASE:P_ID2:ポケモンLV) + 10)/((BASE:P_ID2:ポケモンLV + BASE:P_ID:ポケモンLV)+10)), (25/10)
 
-IF TALENT:P_ID2:遭遇 == 1
+IF TALENT:P_ID:遭遇 == 1
     P_EXP = (((BASE:P_ID2:基礎経験値) * レベル補正)/2 + 1)
 ENDIF
     P_EXP = (((BASE:P_ID2:基礎経験値) * レベル補正) + 1)
-    TALENT:P_ID2:遭遇 = 1
+    TALENT:P_ID:遭遇 = 1
 ELSE
 
 BASE:P_ID:合計獲得経験値 += P_EXP
@@ -393,3 +394,25 @@ SIF BASE:P_ID:合計獲得経験値 >= 必要経験値
 PRINTFORML 次のレベルまで、あと{必要経験値 - BASE:P_ID:合計獲得経験値}
 
 RETURN 必要経験値
+
+@SET_POKEMON_ENEMY_WILD(ポケモンCSV番号)
+#DIM ポケモンCSV番号
+#DIM　P_ID2
+
+ADDCHARA ポケモンCSV番号
+P_ID2 = CHARANUM
+
+RETURN P_ID2
+
+@POKEMON_DATA_P1001(P_ID2 ,登場フラグ)
+#DIM P_ID2
+#DIM 登場フラグ
+
+IF 遭遇フラグ == 1
+ELSE
+    BASE:P_ID2:ポケモンLV = 5
+    
+ENDIF
+
+@SET_POKEMON_ENEMY_TRAINER(トレーナーCSV番号)
+
