@@ -90,7 +90,7 @@ ELSEIF 入力結果 == 7777
 ELSEIF (入力結果 <= ((ページナンバー + 1)*30)) && (入力結果 > ((ページナンバー)*30))
     CALL POKEMON_ID(入力結果)
     P_ID = RESULT:0
-    CALL POKEMON_STATUS_DETAIL(P_ID)
+    CALL POKEMON_STATUS_DETAIL(P_ID, 入力結果)
 ELSE
     GOTO INPUT_LOOP
 ENDIF
@@ -266,20 +266,26 @@ SIF TALENT:P_ID:ポケモン性格 == 25
 
 RETURNF ARGS
 
-@POKEMON_STATUS_DETAIL(P_ID)
+@POKEMON_STATUS_DETAIL(P_ID, 対象ナンバー)
 ;目的ポケモンの様々なステータスを表示する関数
 #DIM P_ID
+#DIM 対象ナンバー
+#DIM ポケモンリストナンバー検証用
+#DIM ポケモンリストナンバー検証用2
+
+
+ポケモンリストナンバー検証用 = 0
 
 DRAWLINE
 PRINTFORML
 
 PRINTFORML 　名　　前　：%CALLNAME:P_ID%
 PRINTFORML 　レベル　　：{BASE:P_ID:ポケモンLV}
-PRINTFORML 　図鑑No.　　{TALENT:P_ID:全国図鑑No}
+PRINTFORML 　図鑑No.　　 {TALENT:P_ID:全国図鑑No}
 PRINTFORM 　性　　別　：
-IF TALENT:P_ID:性別 == 0
+IF TALENT:P_ID:ポケモン性別 == 1
 	PRINTFORML ♂
-ELSEIF TALENT:P_ID:性別 == 1
+ELSEIF TALENT:P_ID:ポケモン性別 == 2
 	PRINTFORML ♀
 ELSE
 ENDIF
@@ -291,34 +297,74 @@ PRINTFORML 　親　　　　：%CALLNAME:(TALENT:P_ID:ポケモン親)%
 
 PRINTFORML 　ID　　　　 .{P_ID}
 
-PRINTFORML 現在の経験値：{BASE:P_ID:合計獲得経験値}
-CALL POKEMON_LVUP(P_ID)
+PRINTFORML
+PRINTFORML 　ＨＰ　:{MAXBASE:P_ID:体力}
+PRINTFORML 　攻撃　:{MAXBASE:P_ID:攻撃}
+PRINTFORML 　防御　:{MAXBASE:P_ID:防御}
+PRINTFORML 　特攻　:{MAXBASE:P_ID:特攻}
+PRINTFORML 　特防　:{MAXBASE:P_ID:特防}
+PRINTFORML 　素早さ:{MAXBASE:P_ID:素早さ}
+PRINTFORML
+
 
 PRINTFORML 　性　　格　：%GET_PERSONALITYNAME(P_ID)%
 
 PRINTFORM 　特　　性　：
-FOR LOCAL:0, 500, 600
+FOR LOCAL:0, 600, 700
     IF TALENT:P_ID:(LOCAL:0) == 1
         PRINTFORM %TALENTNAME:(LOCAL:0)%
     ENDIF
 NEXT
-
 PRINTFORML
+PRINTFORML 　現在の経験値：{BASE:P_ID:合計獲得経験値}
+CALL POKEMON_LVUP(P_ID)
+
 
 PRINT
-PRINTFORML
 DRAWLINE
 PRINT
 PRINTFORML 
-PRINTFORM %TOSTR_SPACE(37)%
+
+
+FOR LOCAL:0, 0, CHARANUM
+    IF TALENT:(LOCAL:0):ポケモン
+        ポケモンリストナンバー検証用++
+        IF ポケモンリストナンバー検証用 == 対象ナンバー
+            ポケモンリストナンバー検証用2 = 対象ナンバー
+        ENDIF
+    ENDIF
+NEXT
+
+
+IF ポケモンリストナンバー検証用2 != 1
+    PRINTBUTTON "[7777] 前のキャラ", 7777
+    PRINTFORM %TOSTR_SPACE(17)%
+ELSE
+    PRINTFORM %TOSTR_SPACE(34)%
+ENDIF
+
 PRINTBUTTON "[9999] もどる", 9999
+
+IF ポケモンリストナンバー検証用2 != ポケモンリストナンバー検証用
+    PRINTFORM %TOSTR_SPACE(17)%
+    PRINTBUTTON "[8888] 次のキャラ", 8888
+ELSE
+ENDIF
+PRINTFORML 
+PRINTFORML 
 
 $INPUT_LOOP
 INPUT
 
 IF RESULT == 9999
-    CALL POKEMON_GET_EXPERIENCE(P_ID, P_ID+1)
+    CALL POKEMON_GET_EXPERIENCE(P_ID, P_ID)
     RETURN
+ELSEIF RESULT == 8888
+    CALL POKEMON_ID(対象ナンバー + 1)
+    CALL POKEMON_STATUS_DETAIL(RESULT:0,対象ナンバー + 1)
+ELSEIF RESULT == 7777
+    CALL POKEMON_ID(対象ナンバー - 1)
+    CALL POKEMON_STATUS_DETAIL(RESULT:0,対象ナンバー - 1)
 ELSE
     GOTO INPUT_LOOP
 ENDIF
@@ -335,12 +381,12 @@ POWER レベル補正関係値, (100*((2 * BASE:P_ID2:ポケモンLV) + 10)/((BA
 
 ;IF レベル補正 == 0
 
-PRINTFORML レベル補正は{レベル補正}だよーん
+;PRINTFORML レベル補正は{レベル補正}だよーん
 
 P_EXP = (((BASE:P_ID2:基礎経験値) * レベル補正)/20000 + 1)
 
 BASE:P_ID:合計獲得経験値 += P_EXP
-PRINTFORML %CALLNAME:P_ID%は{P_EXP}の経験値を得た
+PRINTFORML 　%CALLNAME:P_ID%は{P_EXP}の経験値を得た
 CALL POKEMON_LVUP(P_ID)
 
 @POKEMON_LVUP(P_ID)
@@ -393,10 +439,29 @@ SIF LEVEL1 == 1
 
 IF BASE:P_ID:合計獲得経験値 >= 必要経験値
     BASE:P_ID:ポケモンLV += 1
-    PRINTFORML %CALLNAME:P_ID%はレベルアップして、LV.{BASE:P_ID:ポケモンLV}になった！！
+    PRINTFORML    
+    PRINTFORML 　%CALLNAME:P_ID%はレベルアップして、LV.{BASE:P_ID:ポケモンLV}になった！！
+    PRINTFORML
+    PRINTFORML 　ＨＰ　:{MAXBASE:P_ID:体力}
+    PRINTFORML 　攻撃　:{MAXBASE:P_ID:攻撃}
+    PRINTFORML 　防御　:{MAXBASE:P_ID:防御}
+    PRINTFORML 　特攻　:{MAXBASE:P_ID:特攻}
+    PRINTFORML 　特防　:{MAXBASE:P_ID:特防}
+    PRINTFORML 　素早さ:{MAXBASE:P_ID:素早さ}
+    PRINTFORML
     CALL POKEMON_LVUP(P_ID)
+    CALL STATUS_POKEMON_Calculator(P_ID)
+    PRINTFORML 　　→　ＨＰ　:{MAXBASE:P_ID:体力}
+    PRINTFORML 　　→　攻撃　:{MAXBASE:P_ID:攻撃}
+    PRINTFORML 　　→　防御　:{MAXBASE:P_ID:防御}
+    PRINTFORML 　　→　特攻　:{MAXBASE:P_ID:特攻}
+    PRINTFORML 　　→　特防　:{MAXBASE:P_ID:特防}
+    PRINTFORML 　　→　素早さ:{MAXBASE:P_ID:素早さ}
+    PRINTFORML
+
 ELSE
-    PRINTFORML 次のレベルまで、あと{必要経験値 - BASE:P_ID:合計獲得経験値}
+    PRINTFORML 　次のレベルまで、あと{必要経験値 - BASE:P_ID:合計獲得経験値}
+    PRINTFORML
 ENDIF
 
 
@@ -423,3 +488,184 @@ ENDIF
 
 ;@SET_POKEMON_ENEMY_TRAINER(トレーナーCSV番号)
 
+;--------------------------------------------
+@ADD_POKEMON(ARG,形式)
+#DIM P_ID
+#DIM 形式;0捕獲、1バトル、2交換
+#DIM 性別偏差
+;--------------------------------------------
+ADDCHARA ARG
+
+P_ID == CHARANUM - 1
+
+;ここから下は仮につくる、ゲットした際、交換した際に決められる
+IF 形式 == 0
+    TALENT:P_ID:主人公の手持ち = 1
+    TALENT:P_ID:ポケモン親 = MASTER
+ENDIF
+
+IF TALENT:P_ID:ポケモン特殊性別
+
+ELSE
+    性別偏差 = RAND(1001)
+    IF 性別偏差 <= TALENT:P_ID:性別割合
+        TALENT:P_ID:ポケモン性別 = 1
+    ELSE
+        TALENT:P_ID:ポケモン性別 = 2
+    ENDIF
+	;TALENT:P_ID:ポケモン性別 == RAND(1, 3)
+ENDIF
+
+PRINTFORML ニックネームをつけますか
+CALL ASK_YN("はい","いいえ")
+IF !RESULT
+	$INPUT_LOOP_ONAMAE
+	PRINTL 名前を入力してください
+	INPUTS
+	LOCALS = %RESULTS%
+	IF STRLENS(LOCALS) > 6
+		CLEARLINE 1
+		PRINTFORML 名前は6文字までです
+		GOTO INPUT_LOOP_ONAMAE
+	ENDIF
+	PRINTFORML 「%RESULTS%…でよろしいですか」
+	PRINTL [0] はい
+	PRINTL [1] いいえ
+	INPUT
+	IF RESULT == 0
+		CALLNAME:(P_ID) = %RESULTS%
+		PRINTFORML 
+	ELSEIF RESULT == 1
+		GOTO INPUT_LOOP_ONAMAE
+	ELSE
+		GOTO INPUT_LOOP_ONAMAE
+	ENDIF
+ELSE
+
+ENDIF
+
+
+BASE:P_ID:個体値H == RAND(0, 32)
+BASE:P_ID:個体値A == RAND(0, 32)
+BASE:P_ID:個体値B == RAND(0, 32)
+BASE:P_ID:個体値C == RAND(0, 32)
+BASE:P_ID:個体値D == RAND(0, 32)
+BASE:P_ID:個体値S == RAND(0, 32)
+
+TALENT:P_ID:ポケモン性格 == RAND(1, 26)
+
+PRINTFORML %NAME:P_ID%に{BASE:P_ID:個体値H}を追加して、性格は{TALENT:P_ID:ポケモン性格}にしたよ
+CALL STATUS_POKEMON_Calculator(P_ID)
+	
+
+;--------------------------------------------
+@STATUS_POKEMON_Calculator(P_ID)
+#DIM P_ID
+#DIM ポケモン性格
+;--------------------------------------------
+
+MAXBASE:P_ID:体力 == ((((BASE:P_ID:種族値H*2) + (BASE:P_ID:個体値H) + ((BASE:P_ID:努力値H)/4)) * (BASE:P_ID:ポケモンLV) + 1000 + (BASE:P_ID:ポケモンLV * 100)) / 100)
+
+MAXBASE:P_ID:攻撃 == (((((BASE:P_ID:種族値A*2) + (BASE:P_ID:個体値A) + ((BASE:P_ID:努力値A)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 100 ) / 10000)
+MAXBASE:P_ID:防御 == (((((BASE:P_ID:種族値B*2) + (BASE:P_ID:個体値B) + ((BASE:P_ID:努力値B)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 100 ) / 10000)
+MAXBASE:P_ID:特攻 == (((((BASE:P_ID:種族値C*2) + (BASE:P_ID:個体値C) + ((BASE:P_ID:努力値C)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 100 ) / 10000)
+MAXBASE:P_ID:特防 == (((((BASE:P_ID:種族値D*2) + (BASE:P_ID:個体値D) + ((BASE:P_ID:努力値D)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 100 ) / 10000)
+MAXBASE:P_ID:素早さ == (((((BASE:P_ID:種族値S*2) + (BASE:P_ID:個体値S) + ((BASE:P_ID:努力値S)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 100 ) / 10000)
+
+ポケモン性格 = TALENT:P_ID:ポケモン性格
+
+;PRINTFORML ここでは%GET_PERSONALITYNAME(P_ID)%だよ
+
+IF ポケモン性格 == 1
+	MAXBASE:P_ID:攻撃 == (((((BASE:P_ID:種族値A*2) + (BASE:P_ID:個体値A) + ((BASE:P_ID:努力値A)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:防御 == (((((BASE:P_ID:種族値B*2) + (BASE:P_ID:個体値B) + ((BASE:P_ID:努力値B)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+	
+ELSEIF ポケモン性格 == 2
+	MAXBASE:P_ID:攻撃 == (((((BASE:P_ID:種族値A*2) + (BASE:P_ID:個体値A) + ((BASE:P_ID:努力値A)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:特攻 == (((((BASE:P_ID:種族値C*2) + (BASE:P_ID:個体値C) + ((BASE:P_ID:努力値C)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSEIF ポケモン性格 == 3
+	MAXBASE:P_ID:攻撃 == (((((BASE:P_ID:種族値A*2) + (BASE:P_ID:個体値A) + ((BASE:P_ID:努力値A)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:特防 == (((((BASE:P_ID:種族値D*2) + (BASE:P_ID:個体値D) + ((BASE:P_ID:努力値D)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSEIF ポケモン性格 == 4
+	MAXBASE:P_ID:攻撃 == (((((BASE:P_ID:種族値A*2) + (BASE:P_ID:個体値A) + ((BASE:P_ID:努力値A)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:素早さ == (((((BASE:P_ID:種族値S*2) + (BASE:P_ID:個体値S) + ((BASE:P_ID:努力値S)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSEIF ポケモン性格 == 5
+	MAXBASE:P_ID:防御 == (((((BASE:P_ID:種族値B*2) + (BASE:P_ID:個体値B) + ((BASE:P_ID:努力値B)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:攻撃 == (((((BASE:P_ID:種族値A*2) + (BASE:P_ID:個体値A) + ((BASE:P_ID:努力値A)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSEIF ポケモン性格 == 6
+	MAXBASE:P_ID:防御 == (((((BASE:P_ID:種族値B*2) + (BASE:P_ID:個体値B) + ((BASE:P_ID:努力値B)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:特攻 == (((((BASE:P_ID:種族値C*2) + (BASE:P_ID:個体値C) + ((BASE:P_ID:努力値C)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSEIF ポケモン性格 == 7
+	MAXBASE:P_ID:防御 == (((((BASE:P_ID:種族値B*2) + (BASE:P_ID:個体値B) + ((BASE:P_ID:努力値B)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:特防 == (((((BASE:P_ID:種族値D*2) + (BASE:P_ID:個体値D) + ((BASE:P_ID:努力値D)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSEIF ポケモン性格 == 8
+	MAXBASE:P_ID:防御 == (((((BASE:P_ID:種族値B*2) + (BASE:P_ID:個体値B) + ((BASE:P_ID:努力値B)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:素早さ == (((((BASE:P_ID:種族値S*2) + (BASE:P_ID:個体値S) + ((BASE:P_ID:努力値S)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSEIF ポケモン性格 == 9
+	MAXBASE:P_ID:特攻 == (((((BASE:P_ID:種族値C*2) + (BASE:P_ID:個体値C) + ((BASE:P_ID:努力値C)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:攻撃 == (((((BASE:P_ID:種族値A*2) + (BASE:P_ID:個体値A) + ((BASE:P_ID:努力値A)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSEIF ポケモン性格 == 10
+	MAXBASE:P_ID:特攻 == (((((BASE:P_ID:種族値C*2) + (BASE:P_ID:個体値C) + ((BASE:P_ID:努力値C)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:防御 == (((((BASE:P_ID:種族値B*2) + (BASE:P_ID:個体値B) + ((BASE:P_ID:努力値B)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSEIF ポケモン性格 == 11
+	MAXBASE:P_ID:特攻 == (((((BASE:P_ID:種族値C*2) + (BASE:P_ID:個体値C) + ((BASE:P_ID:努力値C)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:特防 == (((((BASE:P_ID:種族値D*2) + (BASE:P_ID:個体値D) + ((BASE:P_ID:努力値D)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSEIF ポケモン性格 == 12
+	MAXBASE:P_ID:特攻 == (((((BASE:P_ID:種族値C*2) + (BASE:P_ID:個体値C) + ((BASE:P_ID:努力値C)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:素早さ == (((((BASE:P_ID:種族値S*2) + (BASE:P_ID:個体値S) + ((BASE:P_ID:努力値S)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSEIF ポケモン性格 == 13
+	MAXBASE:P_ID:特防 == (((((BASE:P_ID:種族値D*2) + (BASE:P_ID:個体値D) + ((BASE:P_ID:努力値D)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:攻撃 == (((((BASE:P_ID:種族値A*2) + (BASE:P_ID:個体値A) + ((BASE:P_ID:努力値A)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSEIF ポケモン性格 == 14
+	MAXBASE:P_ID:特防 == (((((BASE:P_ID:種族値D*2) + (BASE:P_ID:個体値D) + ((BASE:P_ID:努力値D)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:防御 == (((((BASE:P_ID:種族値B*2) + (BASE:P_ID:個体値B) + ((BASE:P_ID:努力値B)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSEIF ポケモン性格 == 15
+	MAXBASE:P_ID:特防 == (((((BASE:P_ID:種族値D*2) + (BASE:P_ID:個体値D) + ((BASE:P_ID:努力値D)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:特攻 == (((((BASE:P_ID:種族値C*2) + (BASE:P_ID:個体値C) + ((BASE:P_ID:努力値C)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSEIF ポケモン性格 == 16
+	MAXBASE:P_ID:特防 == (((((BASE:P_ID:種族値D*2) + (BASE:P_ID:個体値D) + ((BASE:P_ID:努力値D)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:素早さ == (((((BASE:P_ID:種族値S*2) + (BASE:P_ID:個体値S) + ((BASE:P_ID:努力値S)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSEIF ポケモン性格 == 17
+	MAXBASE:P_ID:素早さ == (((((BASE:P_ID:種族値S*2) + (BASE:P_ID:個体値S) + ((BASE:P_ID:努力値S)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:攻撃 == (((((BASE:P_ID:種族値A*2) + (BASE:P_ID:個体値A) + ((BASE:P_ID:努力値A)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSEIF ポケモン性格 == 18
+	MAXBASE:P_ID:素早さ == (((((BASE:P_ID:種族値S*2) + (BASE:P_ID:個体値S) + ((BASE:P_ID:努力値S)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:防御 == (((((BASE:P_ID:種族値B*2) + (BASE:P_ID:個体値B) + ((BASE:P_ID:努力値B)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSEIF ポケモン性格 == 19
+	MAXBASE:P_ID:素早さ == (((((BASE:P_ID:種族値S*2) + (BASE:P_ID:個体値S) + ((BASE:P_ID:努力値S)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:特攻 == (((((BASE:P_ID:種族値C*2) + (BASE:P_ID:個体値C) + ((BASE:P_ID:努力値C)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSEIF ポケモン性格 == 20
+	MAXBASE:P_ID:素早さ == (((((BASE:P_ID:種族値S*2) + (BASE:P_ID:個体値S) + ((BASE:P_ID:努力値S)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 110 ) / 10000)
+	MAXBASE:P_ID:特防 == (((((BASE:P_ID:種族値D*2) + (BASE:P_ID:個体値D) + ((BASE:P_ID:努力値D)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 90 ) / 10000)
+
+ELSE
+
+ENDIF
+
+BASE:P_ID:体力 = MAXBASE:P_ID:体力
+BASE:P_ID:攻撃 = MAXBASE:P_ID:攻撃
+BASE:P_ID:防御 = MAXBASE:P_ID:防御
+BASE:P_ID:特攻 = MAXBASE:P_ID:特攻
+BASE:P_ID:特防 = MAXBASE:P_ID:特防
+BASE:P_ID:素早さ = MAXBASE:P_ID:素早さ
+
+
+;PRINTFORML %NAME:P_ID%を{MAXBASE:P_ID:体力}へ
