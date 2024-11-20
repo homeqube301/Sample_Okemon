@@ -1,0 +1,88 @@
+﻿
+@SET_POKEMON_ENEMY_WILD(ポケモンCSV番号)
+#DIM ポケモンCSV番号
+#DIM P_ID2
+
+ADDCHARA ポケモンCSV番号
+P_ID2 = CHARANUM - 1
+
+IF TALENT:P_ID2:ポケモン特殊性別
+
+ELSE
+        性別偏差 = RAND(1001)
+        IF 性別偏差 <= TALENT:P_ID2:性別割合
+            TALENT:P_ID2:ポケモン性別 = 1
+        ELSE
+            TALENT:P_ID2:ポケモン性別 = 2
+        ENDIF
+	;TALENT:P_ID2:ポケモン性別 == RAND(1, 3)    
+ENDIF
+
+BASE:P_ID2:個体値H == RAND(0, 32)
+BASE:P_ID2:個体値A == RAND(0, 32)
+BASE:P_ID2:個体値B == RAND(0, 32)
+BASE:P_ID2:個体値C == RAND(0, 32)
+BASE:P_ID2:個体値D == RAND(0, 32)
+BASE:P_ID2:個体値S == RAND(0, 32)
+
+TALENT:P_ID2:ポケモン性格 == RAND(1, 26)
+
+PRINTFORML %NAME:P_ID2%に{BASE:P_ID2:個体値H}を追加して、性格は{TALENT:P_ID2:ポケモン性格}にしたよ
+CALL STATUS_POKEMON_Calculator(P_ID2)
+TRYCCALLFORM POKEMON_DATA_P{ポケモンCSV番号}(P_ID2)
+CATCH
+ENDCATCH
+
+
+RETURN P_ID2
+
+@POKEMON_DATA_P1001(P_ID2 ,登場フラグ)
+#DIM P_ID2
+#DIM 登場フラグ
+
+IF 登場フラグ == 1
+ELSE
+    BASE:P_ID2:ポケモンLV = 5
+    PRINTFORML %NAME:P_ID2%のレベルを{BASE:P_ID2:ポケモンLV}にしたぞ。
+ENDIF
+
+@POKEMON_BATTLE_BEFORE(P_ID2)
+#DIM P_ID
+#DIM P_ID2
+
+
+
+;@SET_POKEMON_ENEMY_TRAINER(トレーナーCSV番号)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
