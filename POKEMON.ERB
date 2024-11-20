@@ -24,7 +24,7 @@ FOR LOCAL:0, 0, CHARANUM
             ポケモンリストナンバー ++
             IF (ポケモンリストナンバー <= ((ページナンバー + 1)*30)) && (ポケモンリストナンバー > ((ページナンバー)*30))
                 STRLENS CALLNAME:(LOCAL:0)
-                文字空白数 = 20 - (RESULT:0)
+                文字空白数 = 19 - (RESULT:0)
                 FOR (LOCAL:1), 0, 文字空白数
                     LOCALS:0 += " "
                 NEXT    
@@ -34,7 +34,7 @@ FOR LOCAL:0, 0, CHARANUM
                 ELSEIF ポケモンリストナンバー < 100
                     LOCALS:1 += " "
                 ENDIF
-                PRINTBUTTON "["+TOSTR(ポケモンリストナンバー)+LOCALS:1+"]"+ CALLNAME:(LOCAL:0),ポケモンリストナンバー
+                PRINTBUTTON "["+TOSTR(ポケモンリストナンバー)+LOCALS:1+"]"+ CALLNAME:(LOCAL:0)+" "+"ID."+TOSTR(LOCAL:0),ポケモンリストナンバー
                 PRINTFORM %LOCALS:0%
                 LOCALS:0 = 
                 LOCALS:1 = 
@@ -100,11 +100,20 @@ ENDIF
 @POKEMON_ALL_STATUS
 #DIM P_ID
 #DIM 入力結果
+$STATUS_LOOP
 
 CALL MINE_POKEMON_LIST
 P_ID = RESULT:0
 入力結果 = RESULT:1
+
+IF P_ID == 9999
+	RETURN
+ENDIF	
+
 CALL POKEMON_STATUS_DETAIL(P_ID, 入力結果)
+IF RESULT == 9999
+	GOTO STATUS_LOOP
+ENDIF	
 
 
 @POKEMON_ID(対象ナンバー)
@@ -276,13 +285,47 @@ SIF TALENT:P_ID:ポケモン性格 == 25
 
 RETURNF ARGS
 
+@GET_POKEMON_CONDITIONS(P_ID)
+#FUNCTIONS
+#DIM P_ID
+SIF CFLAG:P_ID:状態異常 == 1
+	ARGS = まひ
+SIF CFLAG:P_ID:状態異常 == 2
+	ARGS = こおり
+SIF CFLAG:P_ID:状態異常 == 3
+	ARGS = やけど
+SIF CFLAG:P_ID:状態異常 == 4
+	ARGS = どく
+SIF CFLAG:P_ID:状態異常 == 5
+	ARGS = もうどく
+SIF CFLAG:P_ID:状態異常 == 6
+	ARGS = ねむり
+SIF CFLAG:P_ID:状態異常 == 7
+	ARGS = ねむけ
+SIF CFLAG:P_ID:状態異常 == 8
+	ARGS = ひんし
+SIF CFLAG:P_ID:状態異常 == 9
+	ARGS = しもやけ
+
+RETURNF ARGS
+
+@GET_POKEMON_SEX(P_ID)
+#FUNCTIONS
+#DIM P_ID
+
+SIF TALENT:P_ID:ポケモン性別 == 1
+    ARGS = ♂
+SIF TALENT:P_ID:ポケモン性別 == 2
+    ARGS = ♀
+
+RETURNF ARGS
+
 @POKEMON_STATUS_DETAIL(P_ID, 対象ナンバー)
 ;目的ポケモンの様々なステータスを表示する関数
 #DIM P_ID
 #DIM 対象ナンバー
 #DIM ポケモンリストナンバー検証用
 #DIM ポケモンリストナンバー検証用2
-
 
 ポケモンリストナンバー検証用 = 0
 
@@ -367,8 +410,8 @@ $INPUT_LOOP
 INPUT
 
 IF RESULT == 9999
-    CALL POKEMON_GET_EXPERIENCE(P_ID, P_ID)
-    RETURN
+;    CALL POKEMON_GET_EXPERIENCE(P_ID, P_ID)
+	RETURN 9999
 ELSEIF RESULT == 8888
     CALL POKEMON_ID(対象ナンバー + 1)
     CALL POKEMON_STATUS_DETAIL(RESULT:0,対象ナンバー + 1)
@@ -677,6 +720,74 @@ BASE:P_ID:素早さ = MAXBASE:P_ID:素早さ
 #DIM データ用6
 ;--------------------------------------------
 $MEMEBER_CHANGE_LOOP
+
+データ用1 = 0
+データ用2 = 0
+データ用3 = 0
+データ用4 = 0
+データ用5 = 0
+データ用6 = 0
+
+
+FOR LOCAL, 0, CHARANUM
+	IF TALENT:LOCAL:手持ち順番 == 6
+		データ用6 = LOCAL
+	ELSEIF TALENT:LOCAL:手持ち順番 == 5
+		データ用5 = LOCAL
+	ELSEIF TALENT:LOCAL:手持ち順番 == 4
+		データ用4 = LOCAL
+	ELSEIF TALENT:LOCAL:手持ち順番 == 3
+		データ用3 = LOCAL
+	ELSEIF TALENT:LOCAL:手持ち順番 == 2
+		データ用2 = LOCAL
+	ELSEIF TALENT:LOCAL:手持ち順番 == 1
+		データ用1 = LOCAL
+	ENDIF	
+NEXT
+
+	IF データ用5 == 0
+		FOR LOCAL:1, 0, CHARANUM
+			IF TALENT:(LOCAL:1):手持ち順番 == 6
+				TALENT:(LOCAL:1):手持ち順番 == 5
+				GOTO MEMEBER_CHANGE_LOOP
+			ENDIF
+		NEXT				
+	ENDIF
+	IF データ用4 == 0
+		FOR LOCAL:1, 0, CHARANUM
+			IF TALENT:(LOCAL:1):手持ち順番 == 5
+				TALENT:(LOCAL:1):手持ち順番 == 4
+				GOTO MEMEBER_CHANGE_LOOP
+			ENDIF		
+		NEXT	
+	ENDIF
+	IF データ用3 == 0
+		FOR LOCAL:1, 0, CHARANUM
+			IF TALENT:(LOCAL:1):手持ち順番 == 4
+				TALENT:(LOCAL:1):手持ち順番 == 3
+				GOTO MEMEBER_CHANGE_LOOP
+			ENDIF
+		NEXT				
+	ENDIF
+	IF データ用2 == 0
+		FOR LOCAL:1, 0, CHARANUM
+			IF TALENT:(LOCAL:1):手持ち順番 == 3
+				TALENT:(LOCAL:1):手持ち順番 == 2
+				GOTO MEMEBER_CHANGE_LOOP
+			ENDIF
+		NEXT				
+	ENDIF
+	IF データ用1 == 0
+		FOR LOCAL:1, 0, CHARANUM
+			IF TALENT:(LOCAL:1):手持ち順番 == 2
+				TALENT:(LOCAL:1):手持ち順番 == 1
+				GOTO MEMEBER_CHANGE_LOOP
+			ENDIF
+		NEXT				
+	ENDIF
+
+
+
 FOR P_ID, 0, CHARANUM
 	IF TALENT:P_ID:手持ち順番 == 1
 		PRINTFORM [1] - %CALLNAME:P_ID% LV.{BASE:P_ID:ポケモンLV}
