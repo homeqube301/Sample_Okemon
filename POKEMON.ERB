@@ -477,27 +477,6 @@ ENDIF
 
 RETURN 必要経験値
 
-@SET_POKEMON_ENEMY_WILD(ポケモンCSV番号)
-#DIM ポケモンCSV番号
-#DIM P_ID2
-
-ADDCHARA ポケモンCSV番号
-P_ID2 = CHARANUM
-
-RETURN P_ID2
-
-@POKEMON_DATA_P1001(P_ID2 ,登場フラグ)
-#DIM P_ID2
-#DIM 登場フラグ
-
-IF 登場フラグ == 1
-ELSE
-    BASE:P_ID2:ポケモンLV = 5
-    
-ENDIF
-
-;@SET_POKEMON_ENEMY_TRAINER(トレーナーCSV番号)
-
 ;--------------------------------------------
 @ADD_POKEMON(ARG,形式)
 #DIM P_ID
