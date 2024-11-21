@@ -351,7 +351,7 @@ PRINTFORML 　親　　　　：%CALLNAME:(TALENT:P_ID:ポケモン親)%
 PRINTFORML 　ID　　　　 .{P_ID}
 
 PRINTFORML
-PRINTFORML 　ＨＰ　:{MAXBASE:P_ID:体力}
+PRINTFORML 　ＨＰ　:{MAXBASE:P_ID:HP}
 PRINTFORML 　攻撃　:{MAXBASE:P_ID:攻撃}
 PRINTFORML 　防御　:{MAXBASE:P_ID:防御}
 PRINTFORML 　特攻　:{MAXBASE:P_ID:特攻}
@@ -495,7 +495,7 @@ IF BASE:P_ID:合計獲得経験値 >= 必要経験値
     PRINTFORML    
     PRINTFORML 　%CALLNAME:P_ID%はレベルアップして、LV.{BASE:P_ID:ポケモンLV}になった！！
     PRINTFORML
-    PRINTFORML 　ＨＰ　:{MAXBASE:P_ID:体力}
+    PRINTFORML 　ＨＰ　:{MAXBASE:P_ID:HP}
     PRINTFORML 　攻撃　:{MAXBASE:P_ID:攻撃}
     PRINTFORML 　防御　:{MAXBASE:P_ID:防御}
     PRINTFORML 　特攻　:{MAXBASE:P_ID:特攻}
@@ -504,7 +504,7 @@ IF BASE:P_ID:合計獲得経験値 >= 必要経験値
     PRINTFORML
     CALL POKEMON_LVUP(P_ID)
     CALL STATUS_POKEMON_Calculator(P_ID)
-    PRINTFORML 　　→　ＨＰ　:{MAXBASE:P_ID:体力}
+    PRINTFORML 　　→　ＨＰ　:{MAXBASE:P_ID:HP}
     PRINTFORML 　　→　攻撃　:{MAXBASE:P_ID:攻撃}
     PRINTFORML 　　→　防御　:{MAXBASE:P_ID:防御}
     PRINTFORML 　　→　特攻　:{MAXBASE:P_ID:特攻}
@@ -596,7 +596,7 @@ CALL STATUS_POKEMON_Calculator(P_ID)
 #DIM ポケモン性格
 ;--------------------------------------------
 
-MAXBASE:P_ID:体力 == ((((BASE:P_ID:種族値H*2) + (BASE:P_ID:個体値H) + ((BASE:P_ID:努力値H)/4)) * (BASE:P_ID:ポケモンLV) + 1000 + (BASE:P_ID:ポケモンLV * 100)) / 100)
+MAXBASE:P_ID:HP == ((((BASE:P_ID:種族値H*2) + (BASE:P_ID:個体値H) + ((BASE:P_ID:努力値H)/4)) * (BASE:P_ID:ポケモンLV) + 1000 + (BASE:P_ID:ポケモンLV * 100)) / 100)
 
 MAXBASE:P_ID:攻撃 == (((((BASE:P_ID:種族値A*2) + (BASE:P_ID:個体値A) + ((BASE:P_ID:努力値A)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 100 ) / 10000)
 MAXBASE:P_ID:防御 == (((((BASE:P_ID:種族値B*2) + (BASE:P_ID:個体値B) + ((BASE:P_ID:努力値B)/4)) * (BASE:P_ID:ポケモンLV) + 500 ) * 100 ) / 10000)
@@ -692,7 +692,7 @@ ELSE
 
 ENDIF
 
-BASE:P_ID:体力 = MAXBASE:P_ID:体力
+BASE:P_ID:HP = MAXBASE:P_ID:HP
 BASE:P_ID:攻撃 = MAXBASE:P_ID:攻撃
 BASE:P_ID:防御 = MAXBASE:P_ID:防御
 BASE:P_ID:特攻 = MAXBASE:P_ID:特攻
@@ -700,7 +700,7 @@ BASE:P_ID:特防 = MAXBASE:P_ID:特防
 BASE:P_ID:素早さ = MAXBASE:P_ID:素早さ
 
 
-;PRINTFORML %NAME:P_ID%を{MAXBASE:P_ID:体力}へ
+;PRINTFORML %NAME:P_ID%を{MAXBASE:P_ID:HP}へ
 
 
 ;--------------------------------------------

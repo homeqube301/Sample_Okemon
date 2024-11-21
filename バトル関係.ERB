@@ -44,9 +44,15 @@ ENDIF
 #DIM 逃走回数
 #DIM 入力結果
 #DIM FIRST_LINE
+#DIM ターン数
+#DIM 前衛
+
+前衛 = P_ID
+ターン数 = 0
 逃走回数 = 0
 FIRST_LINE = LINECOUNT
 $SHOW_LOOP
+P_ID = 前衛
 PRINTFORML
 DRAWLINE
 PRINTFORML
@@ -60,13 +66,13 @@ IF TALENT:P_ID2:ポケモン性別 != 3
 ENDIF
 
 IF CFLAG:P_ID2:状態異常 != 0
-    PRINTFORML %GET_POKEMON_CONDETION(P_ID2)%
+    PRINTFORML %GET_POKEMON_CONDITIONS(P_ID2)%
 ELSE
 ENDIF
 
 PRINTFORML
 PRINTFORML
-PRINTFORML 　　体力：{BASE:P_ID2:体力}/{MAXBASE:P_ID2:体力} 
+PRINTFORML 　　HP：{BASE:P_ID2:HP}/{MAXBASE:P_ID2:HP} 
 PRINTFORML
 
 ;-----------------------------------------
@@ -79,13 +85,13 @@ IF TALENT:P_ID:ポケモン性別 != 3
 ENDIF
 
 IF CFLAG:P_ID:状態異常 != 0
-    PRINTFORM %GET_POKEMON_CONDETION(P_ID)%
+    PRINTFORM %GET_POKEMON_CONDITIONS(P_ID)%
 ELSE
 ENDIF
 
 PRINTFORML
 PRINTFORML
-PRINTFORML 　　体力：{BASE:P_ID:体力}/{MAXBASE:P_ID:体力} 
+PRINTFORML 　　HP：{BASE:P_ID:HP}/{MAXBASE:P_ID:HP} 
 PRINTFORML
 ;-------------------------------------
 PRINTFORML
@@ -114,12 +120,20 @@ IF 入力結果 == 9999
     ELSE
 		CLEARLINE LINECOUNT - FIRST_LINE        
         PRINTFORML ダメだ、追いつかれた！！
+        CALL POKEMON_ENEMY_TURN(P_ID,P_ID2)
         GOTO SHOW_LOOP
     ENDIF
     PRINTFORML 
 ELSEIF 入力結果 == 8888
     CLEARLINE LINECOUNT - FIRST_LINE
-
+    CALL POKEMON_CHANGE_INBATTLE(前衛)
+    IF RESULT == 9999
+        GOTO SHOW_LOOP
+    ELSE
+        前衛 = RESULT:1
+        CALL POKEMON_ENEMY_TURN(前衛,P_ID2)
+        GOTO SHOW_LOOP
+    ENDIF
 ELSEIF 入力結果 == 7777
     CLEARLINE LINECOUNT - FIRST_LINE
 
@@ -127,8 +141,141 @@ ELSE
     GOTO INPUT_LOOP
 ENDIF
 
+@POKEMON_ENEMY_TURN(P_ID, P_ID2)
+#DIM P_ID
+#DIM P_ID2
 
 
+@POKEMON_CHANGE_INBATTLE(ARG)
+#DIM 手持ちデータ1
+#DIM 手持ちデータ2
+#DIM 手持ちデータ3
+#DIM 手持ちデータ4
+#DIM 手持ちデータ5
+#DIM 手持ちデータ6
+#DIM 前衛
+前衛 = ARG:0
+
+CALL POKEMON_HAND_NUMBER
+手持ちデータ1 = RESULT:0
+手持ちデータ2 = RESULT:1
+手持ちデータ3 = RESULT:2
+手持ちデータ4 = RESULT:3
+手持ちデータ5 = RESULT:4
+手持ちデータ6 = RESULT:5
+
+ARG:10 = 手持ちデータ1
+ARG:11 = 手持ちデータ2
+ARG:12 = 手持ちデータ3
+ARG:13 = 手持ちデータ4
+ARG:14 = 手持ちデータ5
+ARG:15 = 手持ちデータ6
+
+PRINTFORMW どのポケモンと入れ替える？
+
+FOR LOCAL, 1, 7
+    IF (ARG:(LOCAL+9)) == 0 || (ARG:(LOCAL+9)) == 前衛
+        PRINTFORML 「{LOCAL}」　 -         
+    ELSE
+        IF CFLAG:(ARG:(LOCAL+9)):状態異常 != 8
+    	    PRINTFORM  [{LOCAL}]　  - %CALLNAME:(ARG:(LOCAL+9))% %GET_POKEMON_SEX((ARG:(LOCAL+9)))% LV.{BASE:(ARG:(LOCAL+9)):ポケモンLV} HP:{BASE:(ARG:(LOCAL+9)):HP}/{MAXBASE:(ARG:(LOCAL+9)):HP} ID.{(ARG:(LOCAL+9))} %GET_POKEMON_CONDITIONS((ARG:(LOCAL+9)))%
+    	    PRINTFORM %GET_POKEMON_CONDITIONS((ARG:(LOCAL+9)))% 
+            PRINTBUTTON "[つよさをみる]", (LOCAL+9)
+            PRINTFORML
+        ELSE
+            PRINTFORM 「{LOCAL}」　 - %CALLNAME:(ARG:(LOCAL+9))% %GET_POKEMON_SEX((ARG:(LOCAL+9)))% LV.{BASE:(ARG:(LOCAL+9)):ポケモンLV} ID.{(ARG:(LOCAL+9))} ひんし
+            PRINTBUTTON "[つよさをみる]", (LOCAL+9)
+            PRINTFORML
+        ENDIF
+    ENDIF
+NEXT
+LOCAL = 0
+PRINTFORML
+PRINTFORML
+PRINTFORML [9999] -もどる
+DO
+    INPUT
+    SELECTCASE RESULT
+    CASE 1
+        PRINTFORMW 戻れ！！%CALLNAME:前衛%！
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML 行け！！%CALLNAME:手持ちデータ1%！
+        前衛 = 手持ちデータ1
+        RETURN 1,前衛
+    CASE 2
+        PRINTFORMW 戻れ！！%CALLNAME:前衛%！
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML 行け！！%CALLNAME:手持ちデータ2%！
+        前衛 = 手持ちデータ2
+        RETURN 1,前衛
+    CASE 3
+        PRINTFORMW 戻れ！！%CALLNAME:前衛%！
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML 行け！！%CALLNAME:手持ちデータ3%！
+        前衛 = 手持ちデータ3
+        RETURN 1,前衛
+    CASE 4
+        PRINTFORMW 戻れ！！%CALLNAME:前衛%！
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML 行け！！%CALLNAME:手持ちデータ4%！
+        前衛 = 手持ちデータ4
+        RETURN 1,前衛
+    CASE 5
+        PRINTFORMW 戻れ！！%CALLNAME:前衛%！
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML 行け！！%CALLNAME:手持ちデータ5%！
+        前衛 = 手持ちデータ5
+        RETURN 1,前衛
+    CASE 6
+        PRINTFORMW 戻れ！！%CALLNAME:前衛%！
+        PRINTFORML
+        PRINTFORML
+        PRINTFORML 行け！！%CALLNAME:手持ちデータ6%！
+        前衛 = 手持ちデータ6
+        RETURN 1,前衛
+    CASE 9999
+        RETURN 9999
+    ENDSELECT
+LOOP 1
+
+@POKEMON_HAND_NUMBER
+#DIM 手持ちデータ1
+#DIM 手持ちデータ2
+#DIM 手持ちデータ3
+#DIM 手持ちデータ4
+#DIM 手持ちデータ5
+#DIM 手持ちデータ6
+
+手持ちデータ1 = 0
+手持ちデータ2 = 0
+手持ちデータ3 = 0
+手持ちデータ4 = 0
+手持ちデータ5 = 0
+手持ちデータ6 = 0
+
+FOR LOCAL, 0, CHARANUM
+    IF TALENT:LOCAL:手持ち順番 == 1
+        手持ちデータ1 = LOCAL
+    ELSEIF TALENT:LOCAL:手持ち順番 == 2
+        手持ちデータ2 = LOCAL
+    ELSEIF TALENT:LOCAL:手持ち順番 == 3
+        手持ちデータ3 = LOCAL
+    ELSEIF TALENT:LOCAL:手持ち順番 == 4
+        手持ちデータ4 = LOCAL
+    ELSEIF TALENT:LOCAL:手持ち順番 == 5
+        手持ちデータ5 = LOCAL
+    ELSEIF TALENT:LOCAL:手持ち順番 == 6
+        手持ちデータ6 = LOCAL
+    ENDIF
+NEXT
+LOCAL = 0
+
+RETURN 手持ちデータ1, 手持ちデータ2, 手持ちデータ3, 手持ちデータ4, 手持ちデータ5, 手持ちデータ6
 
 @SET_POKEMON_ENEMY_WILD(ポケモンCSV番号)
 #DIM ポケモンCSV番号
