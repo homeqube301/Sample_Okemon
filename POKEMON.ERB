@@ -13,6 +13,7 @@
 
 
 $SHOW_LOOP
+FIRST_LINE = LINECOUNT
 DRAWLINE
 ;PRINT これ空欄空列？なくなる
 PRINTFORML 
@@ -78,16 +79,18 @@ INPUT
 入力結果 = RESULT
 
 IF 入力結果 == 9999
+	CLEARLINE LINECOUNT - FIRST_LINE
     RETURN 9999
 ELSEIF 入力結果 == 8888
     ページナンバー += 1
-    CLEARLINE LINECOUNT - FIRST_LINE
+	CLEARLINE LINECOUNT - FIRST_LINE
     GOTO SHOW_LOOP
 ELSEIF 入力結果 == 7777
     ページナンバー -= 1
-    CLEARLINE LINECOUNT - FIRST_LINE
+	CLEARLINE LINECOUNT - FIRST_LINE
     GOTO SHOW_LOOP
 ELSEIF (入力結果 <= ((ページナンバー + 1)*30)) && (入力結果 > ((ページナンバー)*30))
+	CLEARLINE LINECOUNT - FIRST_LINE
     CALL POKEMON_ID(入力結果)
     P_ID = RESULT:0
     RETURN P_ID, 入力結果
@@ -320,12 +323,17 @@ SIF TALENT:P_ID:ポケモン性別 == 2
 
 RETURNF ARGS
 
-@POKEMON_STATUS_DETAIL(P_ID, 対象ナンバー)
+@POKEMON_STATUS_DETAIL(P_ID, 対象ナンバー, 特殊フラグ)
 ;目的ポケモンの様々なステータスを表示する関数
 #DIM P_ID
 #DIM 対象ナンバー
 #DIM ポケモンリストナンバー検証用
 #DIM ポケモンリストナンバー検証用2
+#DIM 特殊フラグ
+#DIM FIRST_LINE
+
+$STATUS_LOOP
+FIRST_LINE = LINECOUNT
 
 ポケモンリストナンバー検証用 = 0
 
@@ -388,21 +396,27 @@ FOR LOCAL:0, 0, CHARANUM
     ENDIF
 NEXT
 
-
-IF ポケモンリストナンバー検証用2 != 1
-    PRINTBUTTON "[7777] 前のキャラ", 7777
-    PRINTFORM %TOSTR_SPACE(17)%
-ELSE
-    PRINTFORM %TOSTR_SPACE(34)%
+IF 特殊フラグ == 0
+	IF ポケモンリストナンバー検証用2 != 1
+	    PRINTBUTTON "[7777] 前のキャラ", 7777
+	    PRINTFORM %TOSTR_SPACE(17)%
+	ELSE
+	    PRINTFORM %TOSTR_SPACE(34)%
+	ENDIF
+ELSEIF 特殊フラグ == 1
 ENDIF
 
 PRINTBUTTON "[9999] もどる", 9999
 
-IF ポケモンリストナンバー検証用2 != ポケモンリストナンバー検証用
-    PRINTFORM %TOSTR_SPACE(17)%
-    PRINTBUTTON "[8888] 次のキャラ", 8888
-ELSE
+IF 特殊フラグ == 0
+	IF ポケモンリストナンバー検証用2 != ポケモンリストナンバー検証用
+	    PRINTFORM %TOSTR_SPACE(17)%
+	    PRINTBUTTON "[8888] 次のキャラ", 8888
+	ELSE
+	ENDIF
+ELSEIF 特殊フラグ == 1
 ENDIF
+
 PRINTFORML 
 PRINTFORML 
 
@@ -411,13 +425,22 @@ INPUT
 
 IF RESULT == 9999
 ;    CALL POKEMON_GET_EXPERIENCE(P_ID, P_ID)
+    CLEARLINE LINECOUNT - FIRST_LINE
 	RETURN 9999
-ELSEIF RESULT == 8888
+ELSEIF RESULT == 8888 && 特殊フラグ == 0
     CALL POKEMON_ID(対象ナンバー + 1)
-    CALL POKEMON_STATUS_DETAIL(RESULT:0,対象ナンバー + 1)
-ELSEIF RESULT == 7777
+	CLEARLINE LINECOUNT - FIRST_LINE
+	P_ID = RESULT:0
+	対象ナンバー += 1
+	GOTO STATUS_LOOP
+    ;CALL POKEMON_STATUS_DETAIL(RESULT:0,対象ナンバー + 1)
+ELSEIF RESULT == 7777 && 特殊フラグ == 0
     CALL POKEMON_ID(対象ナンバー - 1)
-    CALL POKEMON_STATUS_DETAIL(RESULT:0,対象ナンバー - 1)
+	CLEARLINE LINECOUNT - FIRST_LINE
+	P_ID = RESULT:0
+	対象ナンバー -= 1
+	GOTO STATUS_LOOP
+    ;CALL POKEMON_STATUS_DETAIL(RESULT:0,対象ナンバー - 1)
 ELSE
     GOTO INPUT_LOOP
 ENDIF
@@ -718,9 +741,10 @@ BASE:P_ID:素早さ = MAXBASE:P_ID:素早さ
 #DIM データ用5
 #DIM 空データ用6
 #DIM データ用6
+#DIM FIRST_LINE
 ;--------------------------------------------
 $MEMEBER_CHANGE_LOOP
-
+FIRST_LINE = LINECOUNT
 データ用1 = 0
 データ用2 = 0
 データ用3 = 0
@@ -948,6 +972,7 @@ DO
 				空データ用4 = 0
 				空データ用5 = 0
 				空データ用6 = 0
+				CLEARLINE LINECOUNT - FIRST_LINE
 				GOTO MEMEBER_CHANGE_LOOP
             ELSE
                 P_ID = RESULT:0
@@ -958,6 +983,7 @@ DO
 				空データ用4 = 0
 				空データ用5 = 0
 				空データ用6 = 0
+				CLEARLINE LINECOUNT - FIRST_LINE
 				GOTO MEMEBER_CHANGE_LOOP
 			ENDIF
 		ELSE
@@ -972,6 +998,7 @@ DO
 				空データ用4 = 0
 				空データ用5 = 0
 				空データ用6 = 0
+			CLEARLINE LINECOUNT - FIRST_LINE	
 			GOTO MEMEBER_CHANGE_LOOP
 		ENDIF
 
@@ -985,6 +1012,7 @@ DO
 				空データ用4 = 0
 				空データ用5 = 0
 				空データ用6 = 0
+				CLEARLINE LINECOUNT - FIRST_LINE
 				GOTO MEMEBER_CHANGE_LOOP
             ELSE
                 P_ID = RESULT:0
@@ -995,6 +1023,7 @@ DO
 				空データ用4 = 0
 				空データ用5 = 0
 				空データ用6 = 0
+				CLEARLINE LINECOUNT - FIRST_LINE
 				GOTO MEMEBER_CHANGE_LOOP
 			ENDIF
 		ELSE
@@ -1009,6 +1038,7 @@ DO
 				空データ用4 = 0
 				空データ用5 = 0
 				空データ用6 = 0
+			CLEARLINE LINECOUNT - FIRST_LINE	
 			GOTO MEMEBER_CHANGE_LOOP
 		ENDIF
 
@@ -1022,6 +1052,7 @@ DO
 				空データ用4 = 0
 				空データ用5 = 0
 				空データ用6 = 0
+				CLEARLINE LINECOUNT - FIRST_LINE
 				GOTO MEMEBER_CHANGE_LOOP
             ELSE
                 P_ID = RESULT:0
@@ -1032,6 +1063,7 @@ DO
 				空データ用4 = 0
 				空データ用5 = 0
 				空データ用6 = 0
+				CLEARLINE LINECOUNT - FIRST_LINE
 				GOTO MEMEBER_CHANGE_LOOP
 			ENDIF
 		ELSE
@@ -1046,6 +1078,7 @@ DO
 				空データ用4 = 0
 				空データ用5 = 0
 				空データ用6 = 0
+			CLEARLINE LINECOUNT - FIRST_LINE	
 			GOTO MEMEBER_CHANGE_LOOP
 		ENDIF
 
@@ -1059,6 +1092,7 @@ DO
 				空データ用4 = 0
 				空データ用5 = 0
 				空データ用6 = 0
+				CLEARLINE LINECOUNT - FIRST_LINE
 				GOTO MEMEBER_CHANGE_LOOP
             ELSE
                 P_ID = RESULT:0
@@ -1069,6 +1103,7 @@ DO
 				空データ用4 = 0
 				空データ用5 = 0
 				空データ用6 = 0
+				CLEARLINE LINECOUNT - FIRST_LINE
 				GOTO MEMEBER_CHANGE_LOOP
 			ENDIF
 		ELSE
@@ -1083,6 +1118,7 @@ DO
 				空データ用4 = 0
 				空データ用5 = 0
 				空データ用6 = 0
+			CLEARLINE LINECOUNT - FIRST_LINE	
 			GOTO MEMEBER_CHANGE_LOOP
 		ENDIF
 
@@ -1096,6 +1132,7 @@ DO
 				空データ用4 = 0
 				空データ用5 = 0
 				空データ用6 = 0
+				CLEARLINE LINECOUNT - FIRST_LINE
 				GOTO MEMEBER_CHANGE_LOOP
             ELSE
                 P_ID = RESULT:0
@@ -1106,6 +1143,7 @@ DO
 				空データ用4 = 0
 				空データ用5 = 0
 				空データ用6 = 0
+				CLEARLINE LINECOUNT - FIRST_LINE
 				GOTO MEMEBER_CHANGE_LOOP
 			ENDIF
 		ELSE
@@ -1120,6 +1158,7 @@ DO
 				空データ用4 = 0
 				空データ用5 = 0
 				空データ用6 = 0
+			CLEARLINE LINECOUNT - FIRST_LINE	
 			GOTO MEMEBER_CHANGE_LOOP
 		ENDIF
 
@@ -1133,6 +1172,7 @@ DO
 				空データ用4 = 0
 				空データ用5 = 0
 				空データ用6 = 0
+				CLEARLINE LINECOUNT - FIRST_LINE
 				GOTO MEMEBER_CHANGE_LOOP
             ELSE
                 P_ID = RESULT:0
@@ -1143,6 +1183,7 @@ DO
 				空データ用4 = 0
 				空データ用5 = 0
 				空データ用6 = 0
+				CLEARLINE LINECOUNT - FIRST_LINE
 				GOTO MEMEBER_CHANGE_LOOP
 			ENDIF
 		ELSE
@@ -1157,10 +1198,12 @@ DO
 				空データ用4 = 0
 				空データ用5 = 0
 				空データ用6 = 0
+			CLEARLINE LINECOUNT - FIRST_LINE	
 			GOTO MEMEBER_CHANGE_LOOP
 		ENDIF
 
 	CASE 9999
+		CLEARLINE LINECOUNT - FIRST_LINE
 		RETURN
 	ENDSELECT
 LOOP 1
