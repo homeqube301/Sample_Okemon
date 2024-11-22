@@ -1,0 +1,137 @@
+﻿
+@POKEMON_TYPENAME(Type)
+;目的ポケモンの持つ1つ目のタイプを文字列で返す関数
+#FUNCTIONS
+#DIM Type
+    SIF Type == 1
+        ARGS = ノーマル
+    SIF Type == 2
+        ARGS = ほのお
+    SIF Type == 3
+        ARGS = みず
+    SIF Type == 4
+        ARGS = でんき
+    SIF Type == 5
+        ARGS = くさ
+    SIF Type == 6
+        ARGS = こおり
+    SIF Type == 7
+        ARGS = かくとう
+    SIF Type == 8
+        ARGS = どく
+    SIF Type == 9
+       ARGS = じめん
+    SIF Type == 10
+        ARGS = ひこう
+    SIF Type == 11
+        ARGS = エスパー
+    SIF Type == 12
+        ARGS = むし
+    SIF Type == 13
+        ARGS = いわ
+    SIF Type == 14
+        ARGS = ゴースト
+    SIF Type == 15
+        ARGS = ドラゴン
+    SIF Type == 16
+        ARGS = あく
+    SIF Type == 17
+        ARGS = はがね
+    SIF Type == 18
+        ARGS = フェアリー
+
+RETURNF ARGS
+
+@GET_PERSONALITYNAME(P_ID)
+;目的ポケモンの性格を文字列で返す関数
+#FUNCTIONS
+#DIM P_ID
+
+SIF TALENT:P_ID:ポケモン性格 == 1
+    ARGS = さみしがり
+SIF TALENT:P_ID:ポケモン性格 == 2
+    ARGS = いじっぱり
+SIF TALENT:P_ID:ポケモン性格 == 3
+    ARGS = やんちゃ
+SIF TALENT:P_ID:ポケモン性格 == 4
+    ARGS = ゆうかん
+SIF TALENT:P_ID:ポケモン性格 == 5
+    ARGS = 図太い
+SIF TALENT:P_ID:ポケモン性格 == 6
+    ARGS = わんぱく
+SIF TALENT:P_ID:ポケモン性格 == 7
+    ARGS = 能天気
+SIF TALENT:P_ID:ポケモン性格 == 8
+    ARGS = 呑気
+SIF TALENT:P_ID:ポケモン性格 == 9
+    ARGS = 控えめ
+SIF TALENT:P_ID:ポケモン性格 == 10
+    ARGS = おっとり
+SIF TALENT:P_ID:ポケモン性格 == 11
+    ARGS = うっかりや
+SIF TALENT:P_ID:ポケモン性格 == 12
+    ARGS = れいせい
+SIF TALENT:P_ID:ポケモン性格 == 13
+    ARGS = 穏やか
+SIF TALENT:P_ID:ポケモン性格 == 14
+    ARGS = おとなしい
+SIF TALENT:P_ID:ポケモン性格 == 15
+    ARGS = 慎重
+SIF TALENT:P_ID:ポケモン性格 == 16
+    ARGS = 生意気
+SIF TALENT:P_ID:ポケモン性格 == 17
+    ARGS = 臆病
+SIF TALENT:P_ID:ポケモン性格 == 18
+    ARGS = せっかち
+SIF TALENT:P_ID:ポケモン性格 == 19
+    ARGS = 陽気
+SIF TALENT:P_ID:ポケモン性格 == 20
+    ARGS = 無邪気
+SIF TALENT:P_ID:ポケモン性格 == 21
+    ARGS = 頑張り屋
+SIF TALENT:P_ID:ポケモン性格 == 22
+    ARGS = 素直
+SIF TALENT:P_ID:ポケモン性格 == 23
+    ARGS = 照れ屋
+SIF TALENT:P_ID:ポケモン性格 == 24
+    ARGS = 気まぐれ
+SIF TALENT:P_ID:ポケモン性格 == 25
+    ARGS = 照れ屋
+
+RETURNF ARGS
+
+@GET_POKEMON_CONDITIONS(P_ID)
+#FUNCTIONS
+#DIM P_ID
+SIF CFLAG:P_ID:状態異常 == 1
+	ARGS = まひ
+SIF CFLAG:P_ID:状態異常 == 2
+	ARGS = こおり
+SIF CFLAG:P_ID:状態異常 == 3
+	ARGS = やけど
+SIF CFLAG:P_ID:状態異常 == 4
+	ARGS = どく
+SIF CFLAG:P_ID:状態異常 == 5
+	ARGS = もうどく
+SIF CFLAG:P_ID:状態異常 == 6
+	ARGS = ねむり
+SIF CFLAG:P_ID:状態異常 == 7
+	ARGS = ねむけ
+SIF CFLAG:P_ID:状態異常 == 8
+	ARGS = ひんし
+SIF CFLAG:P_ID:状態異常 == 9
+	ARGS = しもやけ
+
+RETURNF ARGS
+
+@GET_POKEMON_SEX(P_ID)
+#FUNCTIONS
+#DIM P_ID
+
+SIF TALENT:P_ID:ポケモン性別 == 1
+    ARGS = ♂
+SIF TALENT:P_ID:ポケモン性別 == 2
+    ARGS = ♀
+
+RETURNF ARGS
+

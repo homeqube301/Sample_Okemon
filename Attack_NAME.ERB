@@ -1,0 +1,11 @@
+﻿
+@GET_POKEMON_ATTACKNAME(Attack_CODE)
+#FUNCTIONS
+#DIM Attack_CODE
+
+SIF Attack_CODE == 33
+    ARGS = たいあたり
+SIF Attack_CODE == 45
+    ARGS = なきごえ
+
+RETURNF ARGS
