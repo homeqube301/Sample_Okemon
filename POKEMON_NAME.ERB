@@ -1,8 +1,10 @@
 ﻿
-@POKEMON_TYPENAME(Type)
+@GET_POKEMON_TYPENAME(Type)
 ;目的ポケモンの持つ1つ目のタイプを文字列で返す関数
 #FUNCTIONS
 #DIM Type
+    SIF Type == 0
+        ARGS = 
     SIF Type == 1
         ARGS = ノーマル
     SIF Type == 2
