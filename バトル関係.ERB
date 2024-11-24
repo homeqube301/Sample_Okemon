@@ -52,6 +52,12 @@ ENDIF
 #DIM 前衛
 #DIM バトルコマンド
 #DIM バトルコマンドE
+#DIM 成功判定1
+#DIM 成功判定2
+#DIM 急所判定1
+#DIM 急所判定2
+#DIM ダメージ1
+#DIM ダメージ2
 
 前衛 = P_ID
 ターン数 = 0
@@ -121,7 +127,7 @@ IF 入力結果 == 9999
     逃走回数 ++
     PRINTFORML ・・・
     逃走成功率 = ((MAXBASE:P_ID:P_素早さ * 128 / MAXBASE:P_ID2:P_素早さ) + (30 * 逃走回数))*100 / 256
-    IF RAND(101) <= 逃走成功率
+    IF RAND(100) <= 逃走成功率
 		CLEARLINE LINECOUNT - FIRST_LINE        
          PRINTFORML 逃げ切れた！！
          逃走回数 = 0
@@ -144,7 +150,6 @@ ELSEIF 入力結果 == 8888
         前衛 = RESULT:1
         CALL POKEMON_ENEMY_COMMAND(前衛,P_ID2)
         バトルコマンドE = RESULT:0
-        CALL POKEMON_BATTLE_TURN(前衛,P_ID2,バトルコマンド,バトルコマンドE)
         GOTO SHOW_LOOP
     ENDIF
 ELSEIF 入力結果 == 7777
@@ -156,27 +161,264 @@ ELSEIF 入力結果 == 7777
     PRINTFORMW {バトルコマンド}
     CALL POKEMON_ENEMY_COMMAND(前衛,P_ID2)
     バトルコマンドE = RESULT:0
-    CALL POKEMON_BATTLE_Calculatar(前衛,P_ID2,バトルコマンド,バトルコマンドE)
+    CALL POKEMON_BATTLE_Judgement(前衛,P_ID2,バトルコマンド)
+    成功判定1 = RESULT:0
+    急所判定1 = RESULT:1
+    PRINTFORML この技は成功率{成功判定1}で、急所判定は{急所判定1}です
+    CALL POKEMON_BATTLE_Judgement(P_ID2,前衛,バトルコマンドE)
+    成功判定2 = RESULT:0
+    急所判定2 = RESULT:1
+    PRINTFORML この技は成功率{成功判定2}で、急所判定は{急所判定2}です
+    CALL POKEMON_BATTLE_Calculator(前衛, P_ID2,バトルコマンド,バトルコマンドE,成功判定1,急所判定1,成功判定2,急所判定2)
+    ダメージ1 = RESULT:0
+    ダメージ2 = RESULT:1
+    CALL POKEMON_BATTLE_OUTPUT(前衛, P_ID2,バトルコマンド,バトルコマンドE,成功判定1,急所判定1,成功判定2,急所判定2,ダメージ1,ダメージ2)
     GOTO SHOW_LOOP
 ELSE
     GOTO INPUT_LOOP
 ENDIF
 
-@POKEMON_BATTLE_Calculatar(P_ID, P_ID2,バトルコマンド,バトルコマンドE)
+@POKEMON_BATTLE_OUTPUT(P_ID, P_ID2,バトルコマンド,バトルコマンドE,成功判定1,急所判定1,成功判定2,急所判定2,ダメージ1,ダメージ2)
 #DIM P_ID
 #DIM P_ID2
 #DIM バトルコマンド
-;0でなにもしない
 #DIM バトルコマンドE
+;0でなにもしない、もしくはわるあがき
 #DIM FIRST_LINE
+#DIM 同速判定
+#DIM 成功判定1
+#DIM 成功判定2
+;1=命中 2=回避
+#DIM 急所判定1
+#DIM 急所判定2
+;1=急所
 FIRST_LINE = LINECOUNT
-;CLEARLINE LINECOUNT - FIRST_LINE
+同速判定 == 0
+IF BASE:P_ID:P_素早さ == BASE:P_ID2:P_素早さ
+    IF RAND(2) == 1
+        同速判定 = 1
+    ELSE 
+        同速判定 = 2
+    ENDIF
+ENDIF
+
+IF BASE:P_ID:P_素早さ > BASE:P_ID2:P_素早さ || 同速判定 == 1
+
+ELSEIF BASE:P_ID:P_素早さ < BASE:P_ID2:P_素早さ|| 同速判定 == 2
+
+ENDIF
+
+
+RETURN
+
+
+
+CLEARLINE LINECOUNT - FIRST_LINE
+
+RETURN
+
+@POKEMON_BATTLE_Calculator(P_ID, P_ID2,バトルコマンド,バトルコマンドE,成功判定1,急所判定1,成功判定2,急所判定2)
+#DIM P_ID
+#DIM P_ID2
+#DIM バトルコマンド
+#DIM バトルコマンドE
+;0でなにもしない、もしくはわるあがき
+#DIM 同速判定
+#DIM 成功判定1
+#DIM 成功判定2
+;1=命中 2=回避
+;1=急所
+#DIM 急所判定1
+#DIM 急所判定2
+#DIM 分類1
+#DIM 分類2
+#DIM 威力1
+#DIM 威力2
+#DIM 攻撃タイプ1
+#DIM 攻撃タイプ2
+#DIM ダメージ1
+#DIM ダメージ2
+#DIM 相性補正1
+#DIM 相性補正2
+
+ダメージ1 = 0
+ダメージ2 = 0
+
+TRYCCALLFORM ATTACK_Class_P{バトルコマンド}(P_ID,P_ID2)
+CATCH
+ENDCATCH
+分類1 = RESULT
+TRYCCALLFORM ATTACK_Class_P{バトルコマンドE}(P_ID,P_ID2)
+CATCH
+ENDCATCH
+分類2 = RESULT
+TRYCCALLFORM ATTACK_Power_P{バトルコマンド}(P_ID,P_ID2)
+CATCH
+ENDCATCH
+威力1 = RESULT
+TRYCCALLFORM ATTACK_Power_P{バトルコマンドE}(P_ID,P_ID2)
+CATCH
+ENDCATCH
+威力2 = RESULT
+TRYCCALLFORM ATTACK_Type_P{バトルコマンド}(P_ID,P_ID2)
+CATCH
+ENDCATCH
+攻撃タイプ1 = RESULT
+TRYCCALLFORM ATTACK_Type_P{バトルコマンドE}(P_ID,P_ID2)
+CATCH
+ENDCATCH
+攻撃タイプ2 = RESULT
+
+CALL TypeEFDamage(攻撃タイプ1,TALENT:P_ID2:タイプ1,TALENT:P_ID2:タイプ2)
+相性補正1 = RESULT
+
+CALL TypeEFDamage(攻撃タイプ2,TALENT:P_ID:タイプ1,TALENT:P_ID:タイプ2)
+相性補正2 = RESULT
+
+IF CFLAG:P_ID:P_攻撃補正 >= 0
+    BASE:P_ID:P_攻撃 = (BASE:P_ID:P_攻撃 * (2+CFLAG:P_ID:P_攻撃補正) / 2)
+ELSE
+    BASE:P_ID:P_攻撃 = (BASE:P_ID:P_攻撃 * 2 / (2 - CFLAG:P_ID:P_攻撃補正))
+ENDIF
+IF CFLAG:P_ID:P_防御補正 >= 0
+    BASE:P_ID:P_防御 = (BASE:P_ID:P_防御 * (2+CFLAG:P_ID:P_防御補正) / 2)
+ELSE
+    BASE:P_ID:P_防御 = (BASE:P_ID:P_防御 * 2 / (2 - CFLAG:P_ID:P_防御補正))
+ENDIF
+IF CFLAG:P_ID:P_特攻補正 >= 0
+    BASE:P_ID:P_特攻 = (BASE:P_ID:P_特攻 * (2+CFLAG:P_ID:P_特攻補正) / 2)
+ELSE
+    BASE:P_ID:P_特攻 = (BASE:P_ID:P_特攻 * 2 / (2 - CFLAG:P_ID:P_特攻補正))
+ENDIF
+IF CFLAG:P_ID:P_特防補正 >= 0
+    BASE:P_ID:P_特防 = (BASE:P_ID:P_特防 * (2+CFLAG:P_ID:P_特防補正) / 2)
+ELSE
+    BASE:P_ID:P_特防 = (BASE:P_ID:P_特防 * 2 / (2 - CFLAG:P_ID:P_特防補正))
+ENDIF
+IF CFLAG:P_ID:P_素早さ補正 >= 0
+    BASE:P_ID:P_素早さ = (BASE:P_ID:P_素早さ * (2+CFLAG:P_ID:P_素早さ補正) / 2)
+ELSE
+    BASE:P_ID:P_素早さ = (BASE:P_ID:P_素早さ * 2 / (2 - CFLAG:P_ID:P_素早さ補正))
+ENDIF
+
+;攻撃力判定
+IF 成功判定1 != 2 && 分類1 == 1 && 相性補正1 != -4
+    ダメージ1 = (((((BASE:P_ID:ポケモンLV)*2 / 5 + 2) * 威力1) * (BASE:P_ID:P_攻撃)/(BASE:P_ID2:P_防御)) / 50 + 2)
+ELSEIF 成功判定1 != 2 && 分類1 == 2 && 相性補正1 != -4
+    ダメージ1 = (((((BASE:P_ID:ポケモンLV)*2 / 5 + 2) * 威力1) * (BASE:P_ID:P_特攻)/(BASE:P_ID2:P_特防)) / 50 + 2)
+ENDIF
+    IF 急所判定1 == 1
+        ダメージ1 = (ダメージ1*15)/10
+    ENDIF
+    IF (TALENT:P_ID:タイプ1 == 攻撃タイプ1) || (TALENT:P_ID:タイプ2 == 攻撃タイプ1)
+        ダメージ1 = (ダメージ1*15)/10
+    ENDIF
+    IF 相性補正1 == 1
+        ダメージ1 *= 2
+    ELSEIF 相性補正1 == 2
+        ダメージ1 *= 4 
+    ELSEIF 相性補正1 == -1
+        ダメージ1 /= 2
+    ELSEIF 相性補正1 == -2
+        ダメージ1 /= 4
+    ELSEIF 相性補正1 == -4    
+        ダメージ1 = 0
+    ENDIF
+    ダメージ1 *= RAND(85,101)
+    ダメージ1 /= 100
+
+
+IF 成功判定2 != 2 && 分類2 == 1 && 相性補正2 != -4
+    ダメージ2 = (((((BASE:P_ID2:ポケモンLV)*2 / 5 + 2) * 威力2) * (BASE:P_ID2:P_攻撃)/(BASE:P_ID:P_防御)) * 50 + 2)
+ELSEIF 成功判定2 != 2 && 分類2 == 2 && 相性補正2 != -4
+    ダメージ2 = (((((BASE:P_ID2:ポケモンLV)*2 / 5 + 2) * 威力2) * (BASE:P_ID2:P_特攻)/(BASE:P_ID:P_特防)) * 50 + 2)
+ENDIF
+    IF 急所判定2 == 1
+        ダメージ2 = (ダメージ2*15)/10
+    ENDIF
+    IF (TALENT:P_ID2:タイプ2 == 攻撃タイプ2) || (TALENT:P_ID2:タイプ2 == 攻撃タイプ2)
+        ダメージ2 = (ダメージ2*15)/10
+    ENDIF
+    IF 相性補正2 == 1
+        ダメージ2 *= 2
+    ELSEIF 相性補正2 == 2
+        ダメージ2 *= 4 
+    ELSEIF 相性補正2 == -1
+        ダメージ2 /= 2
+    ELSEIF 相性補正2 == -2
+        ダメージ2 /= 4
+    ELSEIF 相性補正2 == -4    
+        ダメージ2 = 0
+    ENDIF
+    ダメージ2 *= RAND(85,101)
+    ダメージ2 /= 100
+
+RETURN ダメージ1, ダメージ2
+
+
+@POKEMON_BATTLE_Judgement(P_ID, P_ID2,バトルコマンド)
+#DIM P_ID
+#DIM P_ID2
+#DIM バトルコマンド
+#DIM 成功判定
+;1=命中 2=回避
+#DIM 急所判定
+;1=急所
+
+成功判定 == 0
+急所判定 == 0
+;成功判定
+TRYCCALLFORM ATTACK_HITRATE_P{バトルコマンド}(P_ID,P_ID2)
+CATCH
+ENDCATCH
+IF (CFLAG:P_ID:P_命中率補正) >= (CFLAG:P_ID2:P_回避率補正)
+    IF RAND(100) < ((RESULT:0 * (3 + (CFLAG:P_ID:P_命中率補正) - (CFLAG:P_ID2:P_回避率補正))) / 3) || RESULT:0 == -1
+        成功判定 = 1
+    ELSE
+        成功判定 = 2
+    ENDIF
+ELSEIF (CFLAG:P_ID:P_命中率補正) < (CFLAG:P_ID2:P_回避率補正)
+    IF RAND(100) < ((RESULT:0 * 3) / (3 + (CFLAG:P_ID2:P_回避率補正) - (CFLAG:P_ID:P_命中率補正))) || RESULT:0 == -1
+        成功判定 = 1
+    ELSE
+        成功判定 = 2
+    ENDIF
+ENDIF
+
+;急所判定
+IF 成功判定 == 1
+    ;攻撃技かどうか
+    TRYCCALLFORM ATTACK_Class_P{バトルコマンド}(P_ID,P_ID2)
+    CATCH
+    ENDCATCH
+    IF RESULT:0 == 3
+    ELSEIF CFLAG:P_ID:P_急所率補正 >= 3
+        急所判定 = 1
+    ELSEIF  CFLAG:P_ID:P_急所率補正 == 2
+        IF RAND(10000) <= 5000
+            急所判定 = 1
+        ENDIF
+    ELSEIF  CFLAG:P_ID:P_急所率補正 == 1
+        IF RAND(10000) <= 1250
+            急所判定 = 1
+        ENDIF
+    ELSE
+        IF RAND(10000) <= 417
+            急所判定 = 1
+        ENDIF
+    ENDIF
+ENDIF
+RETURN 成功判定,急所判定
 
 @POKEMON_ENEMY_COMMAND(前衛,P_ID2)
 #DIM P_ID
 #DIM P_ID2
 #DIM 前衛
 #DIM バトルコマンドE
+#DIM 補助技選択
+
+;IF RAND(100) >= 70
+
 
 @POKEMON_BATTLE_COMMAND(P_ID,P_ID2)
 #DIM P_ID
@@ -232,7 +474,7 @@ DO
     SELECTCASE RESULT
     CASE 1,2,3,4
         IF RESULT == 1
-            BASE:P_ID:技1PP -= 10
+            BASE:P_ID:技1PP -= 1
         ELSEIF RESULT == 2
             BASE:P_ID:技2PP -= 1
         ELSEIF RESULT == 3
@@ -254,6 +496,68 @@ DO
         RETURN 9999
     ENDSELECT
 LOOP 1
+
+;--------------------------------------------
+@TypeEFDamage(ARG:0, ARG:1, ARG:2)
+;<-80,効果なし -2,ぜんぜんきかない -1,いまひとつ 0,等倍 1,こうかばつぐん 2,とってもばつぐん
+;ARG:0,攻撃技のタイプ ARG:1,防御側のタイプ1 ARG:2,防御側のタイプ2
+;--------------------------------------------
+#DIM 基本相性1
+#DIM 基本相性2
+#DIM 最終相性
+#DIM 効果相性
+
+;PRINTFORML タイプ1は{ARG:0}、タイプ2は{ARG:1}、タイプ3は{ARG:2}
+
+CALL TypeIdentify(ARG:0, ARG:1)
+    基本相性1 == RESULT
+
+CALL TypeIdentify(ARG:0, ARG:2)
+    基本相性2 == RESULT
+
+;PRINTFORML 基本相性1は{基本相性1}、基本相性2は{基本相性2}
+
+最終相性 = 基本相性1 + 基本相性2
+
+IF 最終相性 >= 2
+    効果相性 == 2
+ELSEIF 最終相性 == 1
+    効果相性 == 1
+ELSEIF 最終相性 == -1
+    効果相性 == -1
+ELSEIF 最終相性 == -2
+    効果相性 == -2
+ELSEIF 最終相性 <= -80
+    効果相性 == -4
+ELSE
+    効果相性 == 0
+ENDIF
+
+PRINTFORML この際の相性は{効果相性}だよ
+
+RETURN 効果相性
+
+
+;--------------------------------------------
+@TypeIdentify(ARG:0, ARG:1)
+;-99,効果なし  -1,いまひとつ 0,等倍 1,こうかばつぐん
+;ARG:0,攻撃技のタイプ ARG:1,防御側のタイプ
+;1=ノーマル   2=ほのお   3=みず   4=でんき     5=くさ      6=こおり   7=かくとう  8=どく   9=じめん   10=ひこう 
+;11=エスパー 12=むし    13=いわ  14=ゴースト  15=ドラゴン  16=あく   17=はがね    18=フェアリー 
+;--------------------------------------------
+#DIM 基本相性
+
+IF (( ARG:0 == 1 ) && (ARG:1 == 13 )) || (( ARG:0 == 1 ) && (ARG:1 == 17 )) || (( ARG:0 == 2 ) && (ARG:1 == 2 )) || (( ARG:0 == 2 ) && (ARG:1 == 3 )) || (( ARG:0 == 2 ) && (ARG:1 == 13 )) || (( ARG:0 == 2 ) && (ARG:1 == 15 )) || (( ARG:0 == 3 ) && (ARG:1 == 3 )) || (( ARG:0 == 3 ) && (ARG:1 == 5 )) || (( ARG:0 == 3 ) && (ARG:1 == 15 )) || (( ARG:0 == 4 ) && (ARG:1 == 4 )) || (( ARG:0 == 4 ) && (ARG:1 == 5 )) || (( ARG:0 == 4 ) && (ARG:1 == 15 )) || (( ARG:0 == 5 ) && (ARG:1 == 2 )) || (( ARG:0 == 5 ) && (ARG:1 == 5 )) || (( ARG:0 == 5 ) && (ARG:1 == 8 )) || (( ARG:0 == 5 ) && (ARG:1 == 10 )) || (( ARG:0 == 5 ) && (ARG:1 == 12 )) || (( ARG:0 == 5 ) && (ARG:1 == 15 )) || (( ARG:0 == 5 ) && (ARG:1 == 17 )) || (( ARG:0 == 6 ) && (ARG:1 == 2 )) || (( ARG:0 == 6 ) && (ARG:1 == 3 )) || (( ARG:0 == 6 ) && (ARG:1 == 6 )) || (( ARG:0 == 6 ) && (ARG:1 == 17 )) || (( ARG:0 == 7 ) && (ARG:1 == 8 )) || (( ARG:0 == 7 ) && (ARG:1 == 10 )) || (( ARG:0 == 7 ) && (ARG:1 == 11 )) || (( ARG:0 == 7 ) && (ARG:1 == 12 )) || (( ARG:0 == 7 ) && (ARG:1 == 18 )) || (( ARG:0 == 8 ) && (ARG:1 == 8 )) || (( ARG:0 == 8 ) && (ARG:1 == 9 )) || (( ARG:0 == 8 ) && (ARG:1 == 13 )) || (( ARG:0 == 8 ) && (ARG:1 == 14 )) || (( ARG:0 == 9 ) && (ARG:1 == 5 )) || (( ARG:0 == 9 ) && (ARG:1 == 12 )) || (( ARG:0 == 10 ) && (ARG:1 == 4 )) || (( ARG:0 == 10 ) && (ARG:1 == 13 )) || (( ARG:0 == 10 ) && (ARG:1 == 17 )) || (( ARG:0 == 11 ) && (ARG:1 == 11 )) || (( ARG:0 == 11 ) && (ARG:1 == 17 )) || (( ARG:0 == 12 ) && (ARG:1 == 2 )) || (( ARG:0 == 12 ) && (ARG:1 == 7 )) || (( ARG:0 == 12 ) && (ARG:1 == 8 )) || (( ARG:0 == 12 ) && (ARG:1 == 10 )) || (( ARG:0 == 12 ) && (ARG:1 == 14 )) || (( ARG:0 == 12 ) && (ARG:1 == 17 )) || (( ARG:0 == 12 ) && (ARG:1 == 18 )) || (( ARG:0 == 13 ) && (ARG:1 == 7 )) || (( ARG:0 == 13 ) && (ARG:1 == 9 )) || (( ARG:0 == 13 ) && (ARG:1 == 17 )) || (( ARG:0 == 14 ) && (ARG:1 == 16 )) || (( ARG:0 == 15 ) && (ARG:1 == 17 )) || (( ARG:0 == 16 ) && (ARG:1 == 7 )) || (( ARG:0 == 16 ) && (ARG:1 == 16 )) || (( ARG:0 == 16 ) && (ARG:1 == 18 )) || (( ARG:0 == 17 ) && (ARG:1 == 2 )) || (( ARG:0 == 17 ) && (ARG:1 == 3 )) || (( ARG:0 == 17 ) && (ARG:1 == 4 )) || (( ARG:0 == 17 ) && (ARG:1 == 17 )) || (( ARG:0 == 18 ) && (ARG:1 == 2 )) || (( ARG:0 == 18 ) && (ARG:1 == 8 )) || (( ARG:0 == 18 ) && (ARG:1 == 17 ))
+    基本相性 = -1
+ELSEIF (( ARG:0 == 2 ) && (ARG:1 == 5 )) || (( ARG:0 == 2 ) && (ARG:1 == 6 )) || (( ARG:0 == 2 ) && (ARG:1 == 12 )) || (( ARG:0 == 2 ) && (ARG:1 == 17 )) || (( ARG:0 == 3 ) && (ARG:1 == 2 )) || (( ARG:0 == 3 ) && (ARG:1 == 9 )) || (( ARG:0 == 3 ) && (ARG:1 == 13 )) || (( ARG:0 == 4 ) && (ARG:1 == 3 )) || (( ARG:0 == 4 ) && (ARG:1 == 10 )) || (( ARG:0 == 5 ) && (ARG:1 == 3 )) || (( ARG:0 == 5 ) && (ARG:1 == 9 )) || (( ARG:0 == 5 ) && (ARG:1 == 13 )) || (( ARG:0 == 6 ) && (ARG:1 == 5 )) || (( ARG:0 == 6 ) && (ARG:1 == 9 )) || (( ARG:0 == 6 ) && (ARG:1 == 10 )) || (( ARG:0 == 6 ) && (ARG:1 == 15 )) || (( ARG:0 == 7 ) && (ARG:1 == 1 )) || (( ARG:0 == 7 ) && (ARG:1 == 6 )) || (( ARG:0 == 7 ) && (ARG:1 == 13 )) || (( ARG:0 == 7 ) && (ARG:1 == 16 )) || (( ARG:0 == 7 ) && (ARG:1 == 17 )) || (( ARG:0 == 8 ) && (ARG:1 == 5 )) || (( ARG:0 == 8 ) && (ARG:1 == 18 )) || (( ARG:0 == 9 ) && (ARG:1 == 2 )) || (( ARG:0 == 9 ) && (ARG:1 == 4 )) || (( ARG:0 == 9 ) && (ARG:1 == 8 )) || (( ARG:0 == 9 ) && (ARG:1 == 13 )) || (( ARG:0 == 9 ) && (ARG:1 == 17 )) || (( ARG:0 == 10 ) && (ARG:1 == 5 )) || (( ARG:0 == 10 ) && (ARG:1 == 7 )) || (( ARG:0 == 10 ) && (ARG:1 == 12 )) || (( ARG:0 == 11 ) && (ARG:1 == 7 )) || (( ARG:0 == 11 ) && (ARG:1 == 8 )) || (( ARG:0 == 12 ) && (ARG:1 == 5 )) || (( ARG:0 == 12 ) && (ARG:1 == 11 )) || (( ARG:0 == 12 ) && (ARG:1 == 16 )) || (( ARG:0 == 13 ) && (ARG:1 == 2 )) || (( ARG:0 == 13 ) && (ARG:1 == 6 )) || (( ARG:0 == 13 ) && (ARG:1 == 10 )) || (( ARG:0 == 13 ) && (ARG:1 == 12 )) || (( ARG:0 == 14 ) && (ARG:1 == 11 )) || (( ARG:0 == 14 ) && (ARG:1 == 14 )) || (( ARG:0 == 15 ) && (ARG:1 == 15 )) || (( ARG:0 == 16 ) && (ARG:1 == 11 )) || (( ARG:0 == 16 ) && (ARG:1 == 14 )) || (( ARG:0 == 17 ) && (ARG:1 == 6 )) || (( ARG:0 == 17 ) && (ARG:1 == 13 )) || (( ARG:0 == 17 ) && (ARG:1 == 18 )) || (( ARG:0 == 18 ) && (ARG:1 == 7 )) || (( ARG:0 == 18 ) && (ARG:1 == 15 )) || (( ARG:0 == 18 ) && (ARG:1 == 16 ))
+    基本相性 = 1
+ELSEIF (( ARG:0 == 1 ) && (ARG:1 == 14 )) || (( ARG:0 == 4 ) && (ARG:1 == 9 )) || (( ARG:0 == 7 ) && (ARG:1 == 14 )) || (( ARG:0 == 8 ) && (ARG:1 == 17 )) || (( ARG:0 == 9 ) && (ARG:1 == 10 )) || (( ARG:0 == 11 ) && (ARG:1 == 16 )) || (( ARG:0 == 14 ) && (ARG:1 == 1 )) || (( ARG:0 == 15 ) && (ARG:1 == 18 ))  
+    基本相性 = -99
+ELSE
+    基本相性 = 0
+ENDIF
+
+RETURN 基本相性
 
 
 @POKEMON_CHANGE_INBATTLE(ARG)
@@ -467,6 +771,7 @@ RETURN P_ID2
 IF 登場フラグ == 1
 ELSE
     BASE:P_ID2:ポケモンLV = 5
+    ABL:P_ID2:技3 == 22
     PRINTFORML %NAME:P_ID2%のレベルを{BASE:P_ID2:ポケモンLV}にしたぞ。
 ENDIF
 
