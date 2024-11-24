@@ -58,6 +58,9 @@ ENDIF
 #DIM 急所判定2
 #DIM ダメージ1
 #DIM ダメージ2
+#DIM 相性補正1
+#DIM 相性補正2
+#DIM 同速判定
 
 前衛 = P_ID
 ターン数 = 0
@@ -66,6 +69,7 @@ FIRST_LINE = LINECOUNT
 $SHOW_LOOP
 ターン数 ++
 P_ID = 前衛
+同速判定 == 0
 バトルコマンド = 0
 バトルコマンドE = 0
 PRINTFORML
@@ -169,131 +173,143 @@ ELSEIF 入力結果 == 7777
     成功判定2 = RESULT:0
     急所判定2 = RESULT:1
     PRINTFORML この技は成功率{成功判定2}で、急所判定は{急所判定2}です
-    CALL POKEMON_BATTLE_Calculator(前衛, P_ID2,バトルコマンド,バトルコマンドE,成功判定1,急所判定1,成功判定2,急所判定2)
+    CALL POKEMON_BATTLE_Calculator(前衛, P_ID2,バトルコマンド,成功判定1,急所判定1,急所判定2)
     ダメージ1 = RESULT:0
-    ダメージ2 = RESULT:1
-    CALL POKEMON_BATTLE_OUTPUT(前衛, P_ID2,バトルコマンド,バトルコマンドE,成功判定1,急所判定1,成功判定2,急所判定2,ダメージ1,ダメージ2)
+    相性補正1 = RESULT:1
+    CALL POKEMON_BATTLE_Calculator(P_ID2, 前衛,バトルコマンドE,成功判定2,急所判定2,急所判定1)    
+    ダメージ2 = RESULT:0
+    相性補正2 = RESULT:1
+    IF BASE:P_ID:P_素早さ == BASE:P_ID2:P_素早さ
+        IF RAND(2) == 1
+            同速判定 = 1
+        ELSE    
+            同速判定 = 2
+        ENDIF
+    ENDIF
+    IF BASE:P_ID:P_素早さ > BASE:P_ID2:P_素早さ || 同速判定 == 1
+        CALL POKEMON_BATTLE_OUTPUT(前衛, P_ID2,バトルコマンド,バトルコマンドE,成功判定1,急所判定1,成功判定2,急所判定2,ダメージ1,ダメージ2,相性補正1,相性補正2)
+        CALL POKEMON_BATTLE_OUTPUT(P_ID2, 前衛,バトルコマンドE,バトルコマンド,成功判定2,急所判定2,成功判定1,急所判定1,ダメージ2,ダメージ1,相性補正2,相性補正1)   
+    ELSEIF BASE:P_ID:P_素早さ < BASE:P_ID2:P_素早さ|| 同速判定 == 2
+        CALL POKEMON_BATTLE_OUTPUT(P_ID2, 前衛,バトルコマンドE,バトルコマンド,成功判定2,急所判定2,成功判定1,急所判定1,ダメージ2,ダメージ1,相性補正2,相性補正1)   
+        CALL POKEMON_BATTLE_OUTPUT(前衛, P_ID2,バトルコマンド,バトルコマンドE,成功判定1,急所判定1,成功判定2,急所判定2,ダメージ1,ダメージ2,相性補正1,相性補正2)
+    ENDIF
     GOTO SHOW_LOOP
 ELSE
     GOTO INPUT_LOOP
 ENDIF
 
-@POKEMON_BATTLE_OUTPUT(P_ID, P_ID2,バトルコマンド,バトルコマンドE,成功判定1,急所判定1,成功判定2,急所判定2,ダメージ1,ダメージ2)
+@POKEMON_BATTLE_OUTPUT(P_ID, P_ID2,バトルコマンド,バトルコマンドE,成功判定1,急所判定1,成功判定2,急所判定2,ダメージ1,ダメージ2,相性補正1,相性補正2)
 #DIM P_ID
 #DIM P_ID2
 #DIM バトルコマンド
 #DIM バトルコマンドE
 ;0でなにもしない、もしくはわるあがき
 #DIM FIRST_LINE
-#DIM 同速判定
 #DIM 成功判定1
 #DIM 成功判定2
 ;1=命中 2=回避
 #DIM 急所判定1
 #DIM 急所判定2
-;1=急所
-FIRST_LINE = LINECOUNT
-同速判定 == 0
-IF BASE:P_ID:P_素早さ == BASE:P_ID2:P_素早さ
-    IF RAND(2) == 1
-        同速判定 = 1
-    ELSE 
-        同速判定 = 2
-    ENDIF
-ENDIF
-
-IF BASE:P_ID:P_素早さ > BASE:P_ID2:P_素早さ || 同速判定 == 1
-
-ELSEIF BASE:P_ID:P_素早さ < BASE:P_ID2:P_素早さ|| 同速判定 == 2
-
-ENDIF
-
-
-RETURN
-
-
-
-CLEARLINE LINECOUNT - FIRST_LINE
-
-RETURN
-
-@POKEMON_BATTLE_Calculator(P_ID, P_ID2,バトルコマンド,バトルコマンドE,成功判定1,急所判定1,成功判定2,急所判定2)
-#DIM P_ID
-#DIM P_ID2
-#DIM バトルコマンド
-#DIM バトルコマンドE
-;0でなにもしない、もしくはわるあがき
-#DIM 同速判定
-#DIM 成功判定1
-#DIM 成功判定2
-;1=命中 2=回避
-;1=急所
-#DIM 急所判定1
-#DIM 急所判定2
-#DIM 分類1
-#DIM 分類2
-#DIM 威力1
-#DIM 威力2
-#DIM 攻撃タイプ1
-#DIM 攻撃タイプ2
 #DIM ダメージ1
 #DIM ダメージ2
 #DIM 相性補正1
 #DIM 相性補正2
+;1=急所
+FIRST_LINE = LINECOUNT
+IF 成功判定1 == 1
+    PRINTFORML
+    PRINTFORMW %CALLNAME:P_ID%の%GET_POKEMON_ATTACKNAME(バトルコマンド)%!
+    PRINTFORML
+    TRYCCALLFORM ATTACK_Individual_P{バトルコマンド}(P_ID,P_ID2)
+    CATCH
+    ENDCATCH
+    IF RESULT:0 != 0
+        ダメージ1 = RESULT:0
+    ENDIF
+    IF ダメージ1 != 0
+        IF 相性補正1 >= 1
+            PRINTFORML
+            PRINTFORMW 効果はバツグンだ！！
+            PRINTFORML
+        ENDIF
+        IF 急所判定1 == 1
+            PRINTFORML
+            PRINTFORMW 急所にあたった！！
+            PRINTFORML
+        ENDIF
+        BASE:P_ID2:P_HP -= ダメージ1
+    ENDIF
+ELSE
+    PRINTFORML
+    PRINTFORMW 相手の%CALLNAME:P_ID2%には当たらなかった!
+    PRINTFORML
+    PRINTFORML
+    PRINTFORML
+ENDIF
+CLEARLINE LINECOUNT - FIRST_LINE
+RETURN
 
-ダメージ1 = 0
-ダメージ2 = 0
+@POKEMON_BATTLE_Calculator(P_ID, P_ID2,バトルコマンド,成功判定,急所判定,急所判定2)
+#DIM P_ID
+#DIM P_ID2
+#DIM バトルコマンド
+;0でなにもしない、もしくはわるあがき
+#DIM 成功判定
+;1=命中 2=回避
+;1=急所
+#DIM 急所判定
+#DIM 急所判定2
+#DIM 分類
+#DIM 威力
+#DIM 攻撃タイプ
+#DIM ダメージ
+#DIM 相性補正
+
+ダメージ = 0
+RESULT = 0
 
 TRYCCALLFORM ATTACK_Class_P{バトルコマンド}(P_ID,P_ID2)
 CATCH
 ENDCATCH
-分類1 = RESULT
-TRYCCALLFORM ATTACK_Class_P{バトルコマンドE}(P_ID,P_ID2)
-CATCH
-ENDCATCH
-分類2 = RESULT
+分類 = RESULT
 TRYCCALLFORM ATTACK_Power_P{バトルコマンド}(P_ID,P_ID2)
 CATCH
 ENDCATCH
-威力1 = RESULT
-TRYCCALLFORM ATTACK_Power_P{バトルコマンドE}(P_ID,P_ID2)
-CATCH
-ENDCATCH
-威力2 = RESULT
+威力 = RESULT
 TRYCCALLFORM ATTACK_Type_P{バトルコマンド}(P_ID,P_ID2)
 CATCH
-ENDCATCH
-攻撃タイプ1 = RESULT
-TRYCCALLFORM ATTACK_Type_P{バトルコマンドE}(P_ID,P_ID2)
-CATCH
-ENDCATCH
-攻撃タイプ2 = RESULT
 
-CALL TypeEFDamage(攻撃タイプ1,TALENT:P_ID2:タイプ1,TALENT:P_ID2:タイプ2)
-相性補正1 = RESULT
+ENDCATCH
+攻撃タイプ = RESULT
+PRINTFORML {バトルコマンド}の技のタイプは{攻撃タイプ}だよん
 
-CALL TypeEFDamage(攻撃タイプ2,TALENT:P_ID:タイプ1,TALENT:P_ID:タイプ2)
-相性補正2 = RESULT
+CALL TypeEFDamage(攻撃タイプ,TALENT:P_ID2:タイプ1,TALENT:P_ID2:タイプ2)
+相性補正 = RESULT
+
 
 IF CFLAG:P_ID:P_攻撃補正 >= 0
     BASE:P_ID:P_攻撃 = (BASE:P_ID:P_攻撃 * (2+CFLAG:P_ID:P_攻撃補正) / 2)
 ELSE
     BASE:P_ID:P_攻撃 = (BASE:P_ID:P_攻撃 * 2 / (2 - CFLAG:P_ID:P_攻撃補正))
 ENDIF
-IF CFLAG:P_ID:P_防御補正 >= 0
-    BASE:P_ID:P_防御 = (BASE:P_ID:P_防御 * (2+CFLAG:P_ID:P_防御補正) / 2)
-ELSE
-    BASE:P_ID:P_防御 = (BASE:P_ID:P_防御 * 2 / (2 - CFLAG:P_ID:P_防御補正))
+IF 急所判定2 != 1
+    IF CFLAG:P_ID:P_防御補正 >= 0
+        BASE:P_ID:P_防御 = (BASE:P_ID:P_防御 * (2+CFLAG:P_ID:P_防御補正) / 2)
+    ELSE
+        BASE:P_ID:P_防御 = (BASE:P_ID:P_防御 * 2 / (2 - CFLAG:P_ID:P_防御補正))
+    ENDIF
 ENDIF
 IF CFLAG:P_ID:P_特攻補正 >= 0
     BASE:P_ID:P_特攻 = (BASE:P_ID:P_特攻 * (2+CFLAG:P_ID:P_特攻補正) / 2)
 ELSE
     BASE:P_ID:P_特攻 = (BASE:P_ID:P_特攻 * 2 / (2 - CFLAG:P_ID:P_特攻補正))
 ENDIF
-IF CFLAG:P_ID:P_特防補正 >= 0
-    BASE:P_ID:P_特防 = (BASE:P_ID:P_特防 * (2+CFLAG:P_ID:P_特防補正) / 2)
-ELSE
-    BASE:P_ID:P_特防 = (BASE:P_ID:P_特防 * 2 / (2 - CFLAG:P_ID:P_特防補正))
+IF 急所判定2 != 1
+    IF CFLAG:P_ID:P_特防補正 >= 0
+        BASE:P_ID:P_特防 = (BASE:P_ID:P_特防 * (2+CFLAG:P_ID:P_特防補正) / 2)
+    ELSE
+        BASE:P_ID:P_特防 = (BASE:P_ID:P_特防 * 2 / (2 - CFLAG:P_ID:P_特防補正))
+    ENDIF
 ENDIF
 IF CFLAG:P_ID:P_素早さ補正 >= 0
     BASE:P_ID:P_素早さ = (BASE:P_ID:P_素早さ * (2+CFLAG:P_ID:P_素早さ補正) / 2)
@@ -301,59 +317,197 @@ ELSE
     BASE:P_ID:P_素早さ = (BASE:P_ID:P_素早さ * 2 / (2 - CFLAG:P_ID:P_素早さ補正))
 ENDIF
 
-;攻撃力判定
-IF 成功判定1 != 2 && 分類1 == 1 && 相性補正1 != -4
-    ダメージ1 = (((((BASE:P_ID:ポケモンLV)*2 / 5 + 2) * 威力1) * (BASE:P_ID:P_攻撃)/(BASE:P_ID2:P_防御)) / 50 + 2)
-ELSEIF 成功判定1 != 2 && 分類1 == 2 && 相性補正1 != -4
-    ダメージ1 = (((((BASE:P_ID:ポケモンLV)*2 / 5 + 2) * 威力1) * (BASE:P_ID:P_特攻)/(BASE:P_ID2:P_特防)) / 50 + 2)
+;ダメージ判定
+IF 成功判定 != 2 && 分類 == 1 && 相性補正 != -4
+    ダメージ = (((((BASE:P_ID:ポケモンLV)*2 / 5 + 2) * 威力) * (BASE:P_ID:P_攻撃)/(BASE:P_ID2:P_防御)) / 50 + 2)
+ELSEIF 成功判定 != 2 && 分類 == 2 && 相性補正 != -4
+    ダメージ = (((((BASE:P_ID:ポケモンLV)*2 / 5 + 2) * 威力) * (BASE:P_ID:P_特攻)/(BASE:P_ID2:P_特防)) / 50 + 2)
 ENDIF
-    IF 急所判定1 == 1
-        ダメージ1 = (ダメージ1*15)/10
+    IF 急所判定 == 1
+        ダメージ = (ダメージ*15)/10
     ENDIF
-    IF (TALENT:P_ID:タイプ1 == 攻撃タイプ1) || (TALENT:P_ID:タイプ2 == 攻撃タイプ1)
-        ダメージ1 = (ダメージ1*15)/10
+    IF (TALENT:P_ID:タイプ1 == 攻撃タイプ) || (TALENT:P_ID:タイプ2 == 攻撃タイプ)
+        ダメージ = (ダメージ*15)/10
     ENDIF
-    IF 相性補正1 == 1
-        ダメージ1 *= 2
-    ELSEIF 相性補正1 == 2
-        ダメージ1 *= 4 
-    ELSEIF 相性補正1 == -1
-        ダメージ1 /= 2
-    ELSEIF 相性補正1 == -2
-        ダメージ1 /= 4
-    ELSEIF 相性補正1 == -4    
-        ダメージ1 = 0
+    IF 相性補正 == 1
+        ダメージ *= 2
+    ELSEIF 相性補正 == 2
+        ダメージ *= 4 
+    ELSEIF 相性補正 == -1
+        ダメージ /= 2
+    ELSEIF 相性補正 == -2
+        ダメージ /= 4
+    ELSEIF 相性補正 == -4    
+        ダメージ = 0
     ENDIF
-    ダメージ1 *= RAND(85,101)
-    ダメージ1 /= 100
+    ダメージ *= RAND(85,101)
+    ダメージ /= 100
 
+RETURN ダメージ,相性補正
 
-IF 成功判定2 != 2 && 分類2 == 1 && 相性補正2 != -4
-    ダメージ2 = (((((BASE:P_ID2:ポケモンLV)*2 / 5 + 2) * 威力2) * (BASE:P_ID2:P_攻撃)/(BASE:P_ID:P_防御)) * 50 + 2)
-ELSEIF 成功判定2 != 2 && 分類2 == 2 && 相性補正2 != -4
-    ダメージ2 = (((((BASE:P_ID2:ポケモンLV)*2 / 5 + 2) * 威力2) * (BASE:P_ID2:P_特攻)/(BASE:P_ID:P_特防)) * 50 + 2)
-ENDIF
-    IF 急所判定2 == 1
-        ダメージ2 = (ダメージ2*15)/10
-    ENDIF
-    IF (TALENT:P_ID2:タイプ2 == 攻撃タイプ2) || (TALENT:P_ID2:タイプ2 == 攻撃タイプ2)
-        ダメージ2 = (ダメージ2*15)/10
-    ENDIF
-    IF 相性補正2 == 1
-        ダメージ2 *= 2
-    ELSEIF 相性補正2 == 2
-        ダメージ2 *= 4 
-    ELSEIF 相性補正2 == -1
-        ダメージ2 /= 2
-    ELSEIF 相性補正2 == -2
-        ダメージ2 /= 4
-    ELSEIF 相性補正2 == -4    
-        ダメージ2 = 0
-    ENDIF
-    ダメージ2 *= RAND(85,101)
-    ダメージ2 /= 100
-
-RETURN ダメージ1, ダメージ2
+;@POKEMON_BATTLE_Calculator(P_ID, P_ID2,バトルコマンド,バトルコマンドE,成功判定1,急所判定1,成功判定2,急所判定2)
+;#DIM P_ID
+;#DIM P_ID2
+;#DIM バトルコマンド
+;#DIM バトルコマンドE
+;;0でなにもしない、もしくはわるあがき
+;#DIM 成功判定1
+;#DIM 成功判定2
+;;1=命中 2=回避
+;;1=急所
+;#DIM 急所判定1
+;#DIM 急所判定2
+;#DIM 分類1
+;#DIM 分類2
+;#DIM 威力1
+;#DIM 威力2
+;#DIM 攻撃タイプ1
+;#DIM 攻撃タイプ2
+;#DIM ダメージ1
+;#DIM ダメージ2
+;#DIM 相性補正1
+;#DIM 相性補正2
+;
+;ダメージ1 = 0
+;ダメージ2 = 0
+;
+;TRYCCALLFORM ATTACK_Class_P{バトルコマンド}(P_ID,P_ID2)
+;CATCH
+;ENDCATCH
+;分類1 = RESULT
+;TRYCCALLFORM ATTACK_Class_P{バトルコマンドE}(P_ID2,P_ID)
+;CATCH
+;ENDCATCH
+;分類2 = RESULT
+;TRYCCALLFORM ATTACK_Power_P{バトルコマンド}(P_ID,P_ID2)
+;CATCH
+;ENDCATCH
+;威力1 = RESULT
+;TRYCCALLFORM ATTACK_Power_P{バトルコマンドE}(P_ID2,P_ID)
+;CATCH
+;ENDCATCH
+;威力2 = RESULT
+;TRYCCALLFORM ATTACK_Type_P{バトルコマンド}(P_ID,P_ID2)
+;CATCH
+;ENDCATCH
+;攻撃タイプ1 = RESULT
+;TRYCCALLFORM ATTACK_Type_P{バトルコマンドE}(P_ID2,P_ID)
+;CATCH
+;ENDCATCH
+;攻撃タイプ2 = RESULT
+;
+;CALL TypeEFDamage(攻撃タイプ1,TALENT:P_ID2:タイプ1,TALENT:P_ID2:タイプ2)
+;相性補正1 = RESULT
+;
+;CALL TypeEFDamage(攻撃タイプ2,TALENT:P_ID:タイプ1,TALENT:P_ID:タイプ2)
+;相性補正2 = RESULT
+;
+;IF CFLAG:P_ID:P_攻撃補正 >= 0
+;    BASE:P_ID:P_攻撃 = (BASE:P_ID:P_攻撃 * (2+CFLAG:P_ID:P_攻撃補正) / 2)
+;ELSE
+;    BASE:P_ID:P_攻撃 = (BASE:P_ID:P_攻撃 * 2 / (2 - CFLAG:P_ID:P_攻撃補正))
+;ENDIF
+;IF CFLAG:P_ID:P_防御補正 >= 0
+;    BASE:P_ID:P_防御 = (BASE:P_ID:P_防御 * (2+CFLAG:P_ID:P_防御補正) / 2)
+;ELSE
+;    BASE:P_ID:P_防御 = (BASE:P_ID:P_防御 * 2 / (2 - CFLAG:P_ID:P_防御補正))
+;ENDIF
+;IF CFLAG:P_ID:P_特攻補正 >= 0
+;    BASE:P_ID:P_特攻 = (BASE:P_ID:P_特攻 * (2+CFLAG:P_ID:P_特攻補正) / 2)
+;ELSE
+;    BASE:P_ID:P_特攻 = (BASE:P_ID:P_特攻 * 2 / (2 - CFLAG:P_ID:P_特攻補正))
+;ENDIF
+;IF CFLAG:P_ID:P_特防補正 >= 0
+;    BASE:P_ID:P_特防 = (BASE:P_ID:P_特防 * (2+CFLAG:P_ID:P_特防補正) / 2)
+;ELSE
+;    BASE:P_ID:P_特防 = (BASE:P_ID:P_特防 * 2 / (2 - CFLAG:P_ID:P_特防補正))
+;ENDIF
+;IF CFLAG:P_ID:P_素早さ補正 >= 0
+;    BASE:P_ID:P_素早さ = (BASE:P_ID:P_素早さ * (2+CFLAG:P_ID:P_素早さ補正) / 2)
+;ELSE
+;    BASE:P_ID:P_素早さ = (BASE:P_ID:P_素早さ * 2 / (2 - CFLAG:P_ID:P_素早さ補正))
+;ENDIF
+;
+;IF CFLAG:P_ID2:P_攻撃補正 >= 0
+;    BASE:P_ID2:P_攻撃 = (BASE:P_ID2:P_攻撃 * (2+CFLAG:P_ID2:P_攻撃補正) / 2)
+;ELSE
+;    BASE:P_ID2:P_攻撃 = (BASE:P_ID2:P_攻撃 * 2 / (2 - CFLAG:P_ID2:P_攻撃補正))
+;ENDIF
+;IF CFLAG:P_ID2:P_防御補正 >= 0
+;    BASE:P_ID2:P_防御 = (BASE:P_ID2:P_防御 * (2+CFLAG:P_ID2:P_防御補正) / 2)
+;ELSE
+;    BASE:P_ID2:P_防御 = (BASE:P_ID2:P_防御 * 2 / (2 - CFLAG:P_ID2:P_防御補正))
+;ENDIF
+;IF CFLAG:P_ID2:P_特攻補正 >= 0
+;    BASE:P_ID2:P_特攻 = (BASE:P_ID2:P_特攻 * (2+CFLAG:P_ID2:P_特攻補正) / 2)
+;ELSE
+;    BASE:P_ID2:P_特攻 = (BASE:P_ID2:P_特攻 * 2 / (2 - CFLAG:P_ID2:P_特攻補正))
+;ENDIF
+;IF CFLAG:P_ID2:P_特防補正 >= 0
+;    BASE:P_ID2:P_特防 = (BASE:P_ID2:P_特防 * (2+CFLAG:P_ID2:P_特防補正) / 2)
+;ELSE
+;    BASE:P_ID2:P_特防 = (BASE:P_ID2:P_特防 * 2 / (2 - CFLAG:P_ID2:P_特防補正))
+;ENDIF
+;IF CFLAG:P_ID2:P_素早さ補正 >= 0
+;    BASE:P_ID2:P_素早さ = (BASE:P_ID2:P_素早さ * (2+CFLAG:P_ID2:P_素早さ補正) / 2)
+;ELSE
+;    BASE:P_ID2:P_素早さ = (BASE:P_ID2:P_素早さ * 2 / (2 - CFLAG:P_ID2:P_素早さ補正))
+;ENDIF
+;
+;
+;;ダメージ判定
+;IF 成功判定1 != 2 && 分類1 == 1 && 相性補正1 != -4
+;    ダメージ1 = (((((BASE:P_ID:ポケモンLV)*2 / 5 + 2) * 威力1) * (BASE:P_ID:P_攻撃)/(BASE:P_ID2:P_防御)) / 50 + 2)
+;ELSEIF 成功判定1 != 2 && 分類1 == 2 && 相性補正1 != -4
+;    ダメージ1 = (((((BASE:P_ID:ポケモンLV)*2 / 5 + 2) * 威力1) * (BASE:P_ID:P_特攻)/(BASE:P_ID2:P_特防)) / 50 + 2)
+;ENDIF
+;    IF 急所判定1 == 1
+;        ダメージ1 = (ダメージ1*15)/10
+;    ENDIF
+;    IF (TALENT:P_ID:タイプ1 == 攻撃タイプ1) || (TALENT:P_ID:タイプ2 == 攻撃タイプ1)
+;        ダメージ1 = (ダメージ1*15)/10
+;    ENDIF
+;    IF 相性補正1 == 1
+;        ダメージ1 *= 2
+;    ELSEIF 相性補正1 == 2
+;        ダメージ1 *= 4 
+;    ELSEIF 相性補正1 == -1
+;        ダメージ1 /= 2
+;    ELSEIF 相性補正1 == -2
+;        ダメージ1 /= 4
+;    ELSEIF 相性補正1 == -4    
+;        ダメージ1 = 0
+;    ENDIF
+;    ダメージ1 *= RAND(85,101)
+;    ダメージ1 /= 100
+;
+;
+;IF 成功判定2 != 2 && 分類2 == 1 && 相性補正2 != -4
+;    ダメージ2 = (((((BASE:P_ID2:ポケモンLV)*2 / 5 + 2) * 威力2) * (BASE:P_ID2:P_攻撃)/(BASE:P_ID:P_防御)) * 50 + 2)
+;ELSEIF 成功判定2 != 2 && 分類2 == 2 && 相性補正2 != -4
+;    ダメージ2 = (((((BASE:P_ID2:ポケモンLV)*2 / 5 + 2) * 威力2) * (BASE:P_ID2:P_特攻)/(BASE:P_ID:P_特防)) * 50 + 2)
+;ENDIF
+;    IF 急所判定2 == 1
+;        ダメージ2 = (ダメージ2*15)/10
+;    ENDIF
+;    IF (TALENT:P_ID2:タイプ2 == 攻撃タイプ2) || (TALENT:P_ID2:タイプ2 == 攻撃タイプ2)
+;        ダメージ2 = (ダメージ2*15)/10
+;    ENDIF
+;    IF 相性補正2 == 1
+;        ダメージ2 *= 2
+;    ELSEIF 相性補正2 == 2
+;        ダメージ2 *= 4 
+;    ELSEIF 相性補正2 == -1
+;        ダメージ2 /= 2
+;    ELSEIF 相性補正2 == -2
+;        ダメージ2 /= 4
+;    ELSEIF 相性補正2 == -4    
+;        ダメージ2 = 0
+;    ENDIF
+;    ダメージ2 *= RAND(85,101)
+;    ダメージ2 /= 100
+;
+;RETURN ダメージ1, ダメージ2,相性補正1,相性補正2
 
 
 @POKEMON_BATTLE_Judgement(P_ID, P_ID2,バトルコマンド)
@@ -507,7 +661,12 @@ LOOP 1
 #DIM 最終相性
 #DIM 効果相性
 
-;PRINTFORML タイプ1は{ARG:0}、タイプ2は{ARG:1}、タイプ3は{ARG:2}
+基本相性1 = 0
+基本相性2 = 0
+最終相性 = 0
+効果相性 = 0
+
+PRINTFORML タイプ1は{ARG:0}、タイプ2は{ARG:1}、タイプ3は{ARG:2}
 
 CALL TypeIdentify(ARG:0, ARG:1)
     基本相性1 == RESULT

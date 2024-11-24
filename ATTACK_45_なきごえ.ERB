@@ -79,12 +79,15 @@ RETURN
 #DIM P_ID2
 1=敵一体 2=敵全員 3=自分 4=味方全員 5=味方一体 6=敵味方一体(隣接) 7=敵味方一体(遠隔) 8=敵ランダム 9=自分以外 10=全員 11=味方の場 12=相手の場 13=全体の場 14=不定
 RETURN 2
-@ATTACK_Individual_P45(P_ID, P_ID2)
+@ATTACK_Individual_P45(P_ID, P_ID2,ダメージ,急所判定)
 #DIM P_ID
 #DIM P_ID2
+#DIM ダメージ
+#DIM 変更ダメージ
+#DIM 急所判定
 ;個別処理
+RETURN 変更ダメージ
 
-RETURN
 @ATTACK_EXPLAIN_P45(P_ID, P_ID2)
 #DIM P_ID
 #DIM P_ID2
