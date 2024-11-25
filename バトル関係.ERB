@@ -146,14 +146,15 @@ IF 入力結果 == 9999
     ENDIF
     PRINTFORML 
 ELSEIF 入力結果 == 8888
-    CLEARLINE LINECOUNT - FIRST_LINE
     CALL POKEMON_CHANGE_INBATTLE(前衛)
     IF RESULT == 9999
+        CLEARLINE LINECOUNT - FIRST_LINE
         GOTO SHOW_LOOP
     ELSE
         前衛 = RESULT:1
         CALL POKEMON_ENEMY_COMMAND(前衛,P_ID2)
         バトルコマンドE = RESULT:0
+        CLEARLINE LINECOUNT - FIRST_LINE
         GOTO SHOW_LOOP
     ENDIF
 ELSEIF 入力結果 == 7777
@@ -165,6 +166,7 @@ ELSEIF 入力結果 == 7777
     PRINTFORMW {バトルコマンド}
     CALL POKEMON_ENEMY_COMMAND(前衛,P_ID2)
     バトルコマンドE = RESULT:0
+    PRINTFORMW {バトルコマンドE}
     CALL POKEMON_BATTLE_Judgement(前衛,P_ID2,バトルコマンド)
     成功判定1 = RESULT:0
     急所判定1 = RESULT:1
@@ -197,6 +199,51 @@ ELSEIF 入力結果 == 7777
 ELSE
     GOTO INPUT_LOOP
 ENDIF
+
+@POKEMON_ENEMY_COMMAND(前衛,P_ID2)
+#DIM P_ID
+#DIM P_ID2
+#DIM 前衛
+#DIM バトルコマンドE
+#DIM 補助技選択
+#DIM 相性補正1
+#DIM 相性補正2
+#DIM 相性補正3
+#DIM 相性補正4
+
+LOCAL:7 = 0
+LOCAL:8 = 0
+LOCAL:9 = 0
+LOCAL:10 = 0
+
+LOCAL:11 = 0
+LOCAL:12 = 0
+LOCAL:13 = 0
+LOCAL:14 = 0
+相性補正 = 0
+
+CALL ATTACK_Type_P{(ABL:P_ID2:技1)}(P_ID,P_ID2)
+LOCAL:11 = RESULT
+
+
+CALL TypeEFDamage(攻撃タイプ,TALENT:P_ID2:タイプ1,TALENT:P_ID2:タイプ2)
+相性補正 = RESULT
+
+
+CALL ATTACK_Class_P{(ABL:P_ID2:技1)}(P_ID,P_ID2)
+LOCAL:11 = RESULT
+CALL ATTACK_Class_P{(ABL:P_ID2:技2)}(P_ID,P_ID2)
+LOCAL:12 = RESULT
+CALL ATTACK_Class_P{(ABL:P_ID2:技3)}(P_ID,P_ID2)
+LOCAL:13 = RESULT
+CALL ATTACK_Class_P{(ABL:P_ID2:技4)}(P_ID,P_ID2)
+LOCAL:14 = RESULT
+
+IF LOCAL:11 == 3 || LOCAL:12 == 3 || LOCAL:13 == 3 || LOCAL:14 == 3  
+SIF RAND(100) >= 70
+    補助技選択 = 1
+
+IF 補助技選択 = 1
 
 @POKEMON_BATTLE_OUTPUT(P_ID, P_ID2,バトルコマンド,バトルコマンドE,成功判定1,急所判定1,成功判定2,急所判定2,ダメージ1,ダメージ2,相性補正1,相性補正2)
 #DIM P_ID
@@ -287,34 +334,38 @@ CALL TypeEFDamage(攻撃タイプ,TALENT:P_ID2:タイプ1,TALENT:P_ID2:タイプ
 相性補正 = RESULT
 
 
-IF CFLAG:P_ID:P_攻撃補正 >= 0
-    BASE:P_ID:P_攻撃 = (BASE:P_ID:P_攻撃 * (2+CFLAG:P_ID:P_攻撃補正) / 2)
+IF (CFLAG:P_ID:P_攻撃補正) >= 0
+    (BASE:P_ID:P_攻撃) = (BASE:P_ID:P_攻撃 * (2+CFLAG:P_ID:P_攻撃補正) / 2)
 ELSE
-    BASE:P_ID:P_攻撃 = (BASE:P_ID:P_攻撃 * 2 / (2 - CFLAG:P_ID:P_攻撃補正))
-ENDIF
-IF 急所判定2 != 1
-    IF CFLAG:P_ID:P_防御補正 >= 0
-        BASE:P_ID:P_防御 = (BASE:P_ID:P_防御 * (2+CFLAG:P_ID:P_防御補正) / 2)
-    ELSE
-        BASE:P_ID:P_防御 = (BASE:P_ID:P_防御 * 2 / (2 - CFLAG:P_ID:P_防御補正))
+    IF 急所判定1 != 1
+        (BASE:P_ID:P_攻撃) = (BASE:P_ID:P_攻撃 * 2 / (2 - CFLAG:P_ID:P_攻撃補正))
     ENDIF
 ENDIF
-IF CFLAG:P_ID:P_特攻補正 >= 0
-    BASE:P_ID:P_特攻 = (BASE:P_ID:P_特攻 * (2+CFLAG:P_ID:P_特攻補正) / 2)
-ELSE
-    BASE:P_ID:P_特攻 = (BASE:P_ID:P_特攻 * 2 / (2 - CFLAG:P_ID:P_特攻補正))
-ENDIF
 IF 急所判定2 != 1
-    IF CFLAG:P_ID:P_特防補正 >= 0
-        BASE:P_ID:P_特防 = (BASE:P_ID:P_特防 * (2+CFLAG:P_ID:P_特防補正) / 2)
+    IF (CFLAG:P_ID:P_防御補正) >= 0
+        (BASE:P_ID:P_防御) = (BASE:P_ID:P_防御 * (2+CFLAG:P_ID:P_防御補正) / 2)
     ELSE
-        BASE:P_ID:P_特防 = (BASE:P_ID:P_特防 * 2 / (2 - CFLAG:P_ID:P_特防補正))
+        (BASE:P_ID:P_防御) = (BASE:P_ID:P_防御 * 2 / (2 - CFLAG:P_ID:P_防御補正))
     ENDIF
 ENDIF
-IF CFLAG:P_ID:P_素早さ補正 >= 0
-    BASE:P_ID:P_素早さ = (BASE:P_ID:P_素早さ * (2+CFLAG:P_ID:P_素早さ補正) / 2)
+IF (CFLAG:P_ID:P_特攻補正) >= 0
+    (BASE:P_ID:P_特攻) = (BASE:P_ID:P_特攻 * (2+CFLAG:P_ID:P_特攻補正) / 2)
 ELSE
-    BASE:P_ID:P_素早さ = (BASE:P_ID:P_素早さ * 2 / (2 - CFLAG:P_ID:P_素早さ補正))
+    IF 急所判定1 != 1
+        (BASE:P_ID:P_特攻) = (BASE:P_ID:P_特攻 * 2 / (2 - CFLAG:P_ID:P_特攻補正))
+    ENDIF
+ENDIF
+IF 急所判定2 != 1
+    IF (CFLAG:P_ID:P_特防補正) >= 0
+        (BASE:P_ID:P_特防) = (BASE:P_ID:P_特防 * (2+CFLAG:P_ID:P_特防補正) / 2)
+    ELSE
+        (BASE:P_ID:P_特防) = (BASE:P_ID:P_特防 * 2 / (2 - CFLAG:P_ID:P_特防補正))
+    ENDIF
+ENDIF
+IF (CFLAG:P_ID:P_素早さ補正) >= 0
+    (BASE:P_ID:P_素早さ) = (BASE:P_ID:P_素早さ * (2+CFLAG:P_ID:P_素早さ補正) / 2)
+ELSE
+    (BASE:P_ID:P_素早さ) = (BASE:P_ID:P_素早さ * 2 / (2 - CFLAG:P_ID:P_素早さ補正))
 ENDIF
 
 ;ダメージ判定
@@ -563,16 +614,6 @@ IF 成功判定 == 1
     ENDIF
 ENDIF
 RETURN 成功判定,急所判定
-
-@POKEMON_ENEMY_COMMAND(前衛,P_ID2)
-#DIM P_ID
-#DIM P_ID2
-#DIM 前衛
-#DIM バトルコマンドE
-#DIM 補助技選択
-
-;IF RAND(100) >= 70
-
 
 @POKEMON_BATTLE_COMMAND(P_ID,P_ID2)
 #DIM P_ID
