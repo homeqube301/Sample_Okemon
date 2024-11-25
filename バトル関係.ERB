@@ -210,6 +210,13 @@ ENDIF
 #DIM 相性補正2
 #DIM 相性補正3
 #DIM 相性補正4
+#DIM 技優先度1
+#DIM 技優先度2
+#DIM 技優先度3
+#DIM 技優先度4
+
+
+前衛 = P_ID
 
 LOCAL:7 = 0
 LOCAL:8 = 0
@@ -222,28 +229,198 @@ LOCAL:13 = 0
 LOCAL:14 = 0
 相性補正 = 0
 
-CALL ATTACK_Type_P{(ABL:P_ID2:技1)}(P_ID,P_ID2)
+;技のタイプ
+CALL ATTACK_Type_P{(ABL:P_ID2:技1)}(P_ID2,P_ID)
+LOCAL:7 = RESULT
+CALL ATTACK_Type_P{(ABL:P_ID2:技2)}(P_ID2,P_ID)
+LOCAL:8 = RESULT
+CALL ATTACK_Type_P{(ABL:P_ID2:技3)}(P_ID2,P_ID)
+LOCAL:9 = RESULT
+CALL ATTACK_Type_P{(ABL:P_ID2:技4)}(P_ID2,P_ID)
+LOCAL:10 = RESULT
+CALL TypeEFDamage((LOCAL:7),TALENT:P_ID:タイプ1,TALENT:P_ID:タイプ2)
+相性補正1 = RESULT
+CALL TypeEFDamage((LOCAL:8),TALENT:P_ID:タイプ1,TALENT:P_ID:タイプ2)
+相性補正2 = RESULT
+CALL TypeEFDamage((LOCAL:9),TALENT:P_ID:タイプ1,TALENT:P_ID:タイプ2)
+相性補正3 = RESULT
+CALL TypeEFDamage((LOCAL:10),TALENT:P_ID:タイプ1,TALENT:P_ID:タイプ2)
+相性補正4 = RESULT
+;分類
+CALL ATTACK_Class_P{(ABL:P_ID2:技1)}(P_ID2,P_ID)
 LOCAL:11 = RESULT
-
-
-CALL TypeEFDamage(攻撃タイプ,TALENT:P_ID2:タイプ1,TALENT:P_ID2:タイプ2)
-相性補正 = RESULT
-
-
-CALL ATTACK_Class_P{(ABL:P_ID2:技1)}(P_ID,P_ID2)
-LOCAL:11 = RESULT
-CALL ATTACK_Class_P{(ABL:P_ID2:技2)}(P_ID,P_ID2)
+CALL ATTACK_Class_P{(ABL:P_ID2:技2)}(P_ID2,P_ID)
 LOCAL:12 = RESULT
-CALL ATTACK_Class_P{(ABL:P_ID2:技3)}(P_ID,P_ID2)
+CALL ATTACK_Class_P{(ABL:P_ID2:技3)}(P_ID2,P_ID)
 LOCAL:13 = RESULT
-CALL ATTACK_Class_P{(ABL:P_ID2:技4)}(P_ID,P_ID2)
+CALL ATTACK_Class_P{(ABL:P_ID2:技4)}(P_ID2,P_ID)
 LOCAL:14 = RESULT
 
-IF LOCAL:11 == 3 || LOCAL:12 == 3 || LOCAL:13 == 3 || LOCAL:14 == 3  
-SIF RAND(100) >= 70
-    補助技選択 = 1
+SIF 相性補正1 == -4
+    技優先度1 -= 99
+SIF 相性補正2 == -4
+    技優先度2 -= 99
+SIF 相性補正3 == -4
+    技優先度3 -= 99
+SIF 相性補正4 == -4
+    技優先度4 -= 99
 
-IF 補助技選択 = 1
+SIF 相性補正1 == -2
+    技優先度1 -= 2
+SIF 相性補正2 == -2
+    技優先度2 -= 2
+SIF 相性補正3 == -2
+    技優先度3 -= 2
+SIF 相性補正4 == -2
+    技優先度4 -= 2
+
+SIF 相性補正1 == -1
+    技優先度1 -= 1
+SIF 相性補正2 == -1
+    技優先度2 -= 1
+SIF 相性補正3 == -1
+    技優先度3 -= 1
+SIF 相性補正4 == -1
+    技優先度4 -= 1
+
+SIF 相性補正1 == 1
+    技優先度1 += 1
+SIF 相性補正2 == 1
+    技優先度2 += 1
+SIF 相性補正3 == 1
+    技優先度3 += 1
+SIF 相性補正4 == 1
+    技優先度4 += 1
+
+SIF 相性補正1 == 2
+    技優先度1 += 2
+SIF 相性補正2 == 2
+    技優先度2 += 2
+SIF 相性補正3 == 2
+    技優先度3 += 2
+SIF 相性補正4 == 2
+    技優先度4 += 2
+
+IF LOCAL:11 == 3 || LOCAL:12 == 3 || LOCAL:13 == 3 || LOCAL:14 == 3
+    IF RAND(100) >= 70
+        補助技選択 = 1
+    ENDIF
+    IF 補助技選択 == 1
+        LOCAL:15 = RAND(1, 5)
+        IF (LOCAL:15) == 1 && (LOCAL:11) == 3 && 技優先度1 == 2
+            バトルコマンドE = (ABL:P_ID2:技1)
+        ELSEIF (LOCAL:15) == 2 && (LOCAL:12) == 3 && 技優先度2 == 2
+            バトルコマンドE = (ABL:P_ID2:技2)
+        ELSEIF (LOCAL:15) == 3 && (LOCAL:13) == 3 && 技優先度3 == 2
+            バトルコマンドE = (ABL:P_ID2:技3)
+        ELSEIF (LOCAL:15) == 4 && (LOCAL:14) == 3 && 技優先度4 == 2
+            バトルコマンドE = (ABL:P_ID2:技4)
+        ENDIF
+        IF (LOCAL:15) == 1 && (LOCAL:11) == 3 && && 技優先度1 == 1
+            バトルコマンドE = (ABL:P_ID2:技1)
+        ELSEIF (LOCAL:15) == 2 && (LOCAL:12) == 3 && 技優先度2 == 1
+            バトルコマンドE = (ABL:P_ID2:技2)
+        ELSEIF (LOCAL:15) == 3 && (LOCAL:13) == 3 && 技優先度3 == 1
+            バトルコマンドE = (ABL:P_ID2:技3)
+        ELSEIF (LOCAL:15) == 4 && (LOCAL:14) == 3 && 技優先度4 == 1
+            バトルコマンドE = (ABL:P_ID2:技4)
+        ENDIF
+        IF (LOCAL:15) == 1 && (LOCAL:11) == 3 && && 技優先度1 == 0
+            バトルコマンドE = (ABL:P_ID2:技1)
+        ELSEIF (LOCAL:15) == 2 && (LOCAL:12) == 3 && 技優先度2 == 0
+            バトルコマンドE = (ABL:P_ID2:技2)
+        ELSEIF (LOCAL:15) == 3 && (LOCAL:13) == 3 && 技優先度3 == 0
+            バトルコマンドE = (ABL:P_ID2:技3)
+        ELSEIF (LOCAL:15) == 4 && (LOCAL:14) == 3 && 技優先度4 == 0
+            バトルコマンドE = (ABL:P_ID2:技4)
+        ENDIF
+        IF (LOCAL:15) == 1 && (LOCAL:11) == 3 && && 技優先度1 == -1
+            バトルコマンドE = (ABL:P_ID2:技1)
+        ELSEIF (LOCAL:15) == 2 && (LOCAL:12) == 3 && 技優先度2 == -1
+            バトルコマンドE = (ABL:P_ID2:技2)
+        ELSEIF (LOCAL:15) == 3 && (LOCAL:13) == 3 && 技優先度3 == -1
+            バトルコマンドE = (ABL:P_ID2:技3)
+        ELSEIF (LOCAL:15) == 4 && (LOCAL:14) == 3 && 技優先度4 == -1
+            バトルコマンドE = (ABL:P_ID2:技4)
+        ENDIF
+        IF (LOCAL:15) == 1 && (LOCAL:11) == 3 && && 技優先度1 == -2
+            バトルコマンドE = (ABL:P_ID2:技1)
+        ELSEIF (LOCAL:15) == 2 && (LOCAL:12) == 3 && 技優先度2 == -2
+            バトルコマンドE = (ABL:P_ID2:技2)
+        ELSEIF (LOCAL:15) == 3 && (LOCAL:13) == 3 && 技優先度3 == -2
+            バトルコマンドE = (ABL:P_ID2:技3)
+        ELSEIF (LOCAL:15) == 4 && (LOCAL:14) == 3 && 技優先度4 == -2
+            バトルコマンドE = (ABL:P_ID2:技4)
+        ENDIF
+        IF (LOCAL:15) == 1 && (LOCAL:11) == 3 && && 技優先度1 == -99
+            バトルコマンドE = (ABL:P_ID2:技1)
+        ELSEIF (LOCAL:15) == 2 && (LOCAL:12) == 3 && 技優先度2 == -99
+            バトルコマンドE = (ABL:P_ID2:技2)
+        ELSEIF (LOCAL:15) == 3 && (LOCAL:13) == 3 && 技優先度3 == -99
+            バトルコマンドE = (ABL:P_ID2:技3)
+        ELSEIF (LOCAL:15) == 4 && (LOCAL:14) == 3 && 技優先度4 == -99
+            バトルコマンドE = (ABL:P_ID2:技4)
+        ENDIF
+    ENDIF
+ENDIF
+
+LOCAL:16 = RAND(1, 5)
+IF (LOCAL:16) == 1 && 技優先度1 == 2
+    バトルコマンドE = (ABL:P_ID2:技1)
+ELSEIF (LOCAL:16) == 2 && 技優先度2 == 2
+    バトルコマンドE = (ABL:P_ID2:技2)
+ELSEIF (LOCAL:16) == 3 && 技優先度3 == 2
+    バトルコマンドE = (ABL:P_ID2:技3)
+ELSEIF (LOCAL:16) == 4 && 技優先度4 == 2
+    バトルコマンドE = (ABL:P_ID2:技4)
+ENDIF
+IF (LOCAL:16) == 1 && 技優先度1 == 1
+    バトルコマンドE = (ABL:P_ID2:技1)
+ELSEIF (LOCAL:16) == 2 && 技優先度2 == 1
+    バトルコマンドE = (ABL:P_ID2:技2)
+ELSEIF (LOCAL:16) == 3 && 技優先度3 == 1
+    バトルコマンドE = (ABL:P_ID2:技3)
+ELSEIF (LOCAL:16) == 4 && 技優先度4 == 1
+    バトルコマンドE = (ABL:P_ID2:技4)
+ENDIF
+IF (LOCAL:16) == 1 && 技優先度1 == 0
+    バトルコマンドE = (ABL:P_ID2:技1)
+ELSEIF (LOCAL:16) == 2 && 技優先度2 == 0
+    バトルコマンドE = (ABL:P_ID2:技2)
+ELSEIF (LOCAL:16) == 3 && 技優先度3 == 0
+    バトルコマンドE = (ABL:P_ID2:技3)
+ELSEIF (LOCAL:16) == 4 && 技優先度4 == 0
+    バトルコマンドE = (ABL:P_ID2:技4)
+ENDIF
+IF (LOCAL:16) == 1 && 技優先度1 == -1
+    バトルコマンドE = (ABL:P_ID2:技1)
+ELSEIF (LOCAL:16) == 2 技優先度2 == -1
+    バトルコマンドE = (ABL:P_ID2:技2)
+ELSEIF (LOCAL:16) == 3 && 技優先度3 == -1
+    バトルコマンドE = (ABL:P_ID2:技3)
+ELSEIF (LOCAL:16) == 4 && 技優先度4 == -1
+    バトルコマンドE = (ABL:P_ID2:技4)
+ENDIF
+IF (LOCAL:16) == 1 && 技優先度1 == -2
+    バトルコマンドE = (ABL:P_ID2:技1)
+ELSEIF (LOCAL:16) == 2 && 技優先度2 == -2
+    バトルコマンドE = (ABL:P_ID2:技2)
+ELSEIF (LOCAL:16) == 3 && 技優先度3 == -2
+    バトルコマンドE = (ABL:P_ID2:技3)
+ELSEIF (LOCAL:16) == 4 && 技優先度4 == -2
+    バトルコマンドE = (ABL:P_ID2:技4)
+ENDIF
+IF (LOCAL:16) == 1 && 技優先度1 == -99
+    バトルコマンドE = (ABL:P_ID2:技1)
+ELSEIF (LOCAL:16) == 2 && 技優先度2 == -99
+    バトルコマンドE = (ABL:P_ID2:技2)
+ELSEIF (LOCAL:16) == 3 && 技優先度3 == -99
+    バトルコマンドE = (ABL:P_ID2:技3)
+ELSEIF (LOCAL:16) == 4 && 技優先度4 == -99
+    バトルコマンドE = (ABL:P_ID2:技4)
+ENDIF
+
+RETURN バトルコマンドE
 
 @POKEMON_BATTLE_OUTPUT(P_ID, P_ID2,バトルコマンド,バトルコマンドE,成功判定1,急所判定1,成功判定2,急所判定2,ダメージ1,ダメージ2,相性補正1,相性補正2)
 #DIM P_ID
