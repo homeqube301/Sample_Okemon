@@ -5,6 +5,19 @@
 #DIM 戦闘結果
 #DIM ポケモンCSV番号
 #DIM FIRST_LINE
+#DIM 交代先1
+#DIM 交代先2
+#DIM 交代先3
+#DIM 交代先4
+#DIM 交代先5
+#DIM 交代先6
+
+交代先1 = 0
+交代先2 = 0
+交代先3 = 0
+交代先4 = 0
+交代先5 = 0
+交代先6 = 0
 
 FIRST_LINE = LINECOUNT
 
@@ -35,6 +48,34 @@ PRINTFORMW
 CLEARLINE LINECOUNT - FIRST_LINE        
 CALL BATTLE_POKEMON_WILD_MAINCOMMAND_SINGLE(P_ID,P_ID2)
 戦闘結果 = RESULT
+交代先1 = RESULT:1
+交代先2 = RESULT:2
+交代先3 = RESULT:3
+交代先4 = RESULT:4
+交代先5 = RESULT:5
+交代先6 = RESULT:6
+P_ID = RESULT:7
+
+IF 戦闘結果 == 8888
+   ;戦闘終了
+   CALL POKEMON_GET_EXPERIENCE(P_ID,P_ID2)
+   SIF 交代先1 != 0 && (交代先1 != P_ID)
+        CALL POKEMON_GET_EXPERIENCE(交代先1,P_ID2,1)
+   SIF 交代先2 != 0 && (交代先2 != P_ID)
+        CALL POKEMON_GET_EXPERIENCE(交代先2,P_ID2,1)
+   SIF 交代先3 != 0 && (交代先3 != P_ID)
+        CALL POKEMON_GET_EXPERIENCE(交代先3,P_ID2,1)
+   SIF 交代先4 != 0 & (交代先4 != P_ID)
+        CALL POKEMON_GET_EXPERIENCE(交代先4,P_ID2,1)
+   SIF 交代先5 != 0 && (交代先5 != P_ID)
+        CALL POKEMON_GET_EXPERIENCE(交代先5,P_ID2,1)
+   SIF 交代先6 != 0 && (交代先6 != P_ID)
+        CALL POKEMON_GET_EXPERIENCE(交代先6,P_ID2,1)
+
+   DELCHARA P_ID2
+   RETURN
+ENDIF 
+
 IF 戦闘結果 == 9999
    ;強制終了
    DELCHARA P_ID2
@@ -61,17 +102,53 @@ ENDIF
 #DIM 相性補正1
 #DIM 相性補正2
 #DIM 同速判定
+#DIM 交代先1
+#DIM 交代先2
+#DIM 交代先3
+#DIM 交代先4
+#DIM 交代先5
+#DIM 交代先6
+
 
 前衛 = P_ID
 ターン数 = 0
 逃走回数 = 0
+交代先1 = 0
+交代先2 = 0
+交代先3 = 0
+交代先4 = 0
+交代先5 = 0
+交代先6 = 0
+
+交代先1 = 前衛
+
 FIRST_LINE = LINECOUNT
 $SHOW_LOOP
-ターン数 ++
+
+IF 前衛 != P_ID
+
+ENDIF
+
 P_ID = 前衛
+
+IF BASE:P_ID2:P_HP <= 0
+    RETURN 8888, 交代先1, 交代先2, 交代先3, 交代先4, 交代先5, 交代先6, P_ID
+ENDIF
+
+ターン数 ++
 同速判定 == 0
 バトルコマンド = 0
 バトルコマンドE = 0
+成功判定1 = 0
+成功判定2 = 0
+急所判定1 = 0
+急所判定2 = 0
+ダメージ1 = 0
+ダメージ2 = 0
+相性補正1 = 0
+相性補正2 = 0
+
+
 PRINTFORML
 DRAWLINE
 PRINTFORML
@@ -139,20 +216,49 @@ IF 入力結果 == 9999
     ELSE
 		CLEARLINE LINECOUNT - FIRST_LINE        
         PRINTFORML ダメだ、追いつかれた！！
+        逃走回数 ++
         CALL POKEMON_ENEMY_COMMAND(前衛,P_ID2)
         バトルコマンドE = RESULT:0
-        CALL POKEMON_BATTLE_TURN(前衛,P_ID2,バトルコマンド,バトルコマンドE)
+        CALL POKEMON_BATTLE_Judgement(P_ID2,前衛,バトルコマンドE)
+        成功判定2 = RESULT:0
+        急所判定2 = RESULT:1
+        CALL POKEMON_BATTLE_Calculator(P_ID2, 前衛,バトルコマンドE,成功判定2,急所判定2,0)    
+        ダメージ2 = RESULT:0
+        相性補正2 = RESULT:1
+        CALL POKEMON_BATTLE_OUTPUT(P_ID2, 前衛,バトルコマンドE,バトルコマンド,成功判定2,急所判定2,成功判定1,急所判定1,ダメージ2,ダメージ1,相性補正2,相性補正1)   
         GOTO SHOW_LOOP
     ENDIF
     PRINTFORML 
 ELSEIF 入力結果 == 8888
-    CALL POKEMON_CHANGE_INBATTLE(前衛)
+    CALL POKEMON_CHANGE_INBATTLE(前衛)    
     IF RESULT == 9999
         CLEARLINE LINECOUNT - FIRST_LINE
         GOTO SHOW_LOOP
     ELSE
         前衛 = RESULT:1
+        IF 交代先1 == 0 || 交代先1 == 前衛
+            交代先1 == 前衛
+        ELSEIF 交代先2 == 0 || 交代先2 == 前衛
+            交代先2 == 前衛
+        ELSEIF 交代先3 == 0 || 交代先3 == 前衛
+            交代先3 == 前衛
+        ELSEIF 交代先4 == 0 || 交代先4 == 前衛
+            交代先4 == 前衛
+        ELSEIF 交代先5 == 0 || 交代先5 == 前衛
+            交代先5 == 前衛
+        ELSEIF 交代先6 == 0 || 交代先6 == 前衛
+            交代先6 == 前衛
+        ENDIF
+
         CALL POKEMON_ENEMY_COMMAND(前衛,P_ID2)
+        バトルコマンドE = RESULT:0
+        CALL POKEMON_BATTLE_Judgement(P_ID2,前衛,バトルコマンドE)
+        成功判定2 = RESULT:0
+        急所判定2 = RESULT:1
+        CALL POKEMON_BATTLE_Calculator(P_ID2, 前衛,バトルコマンドE,成功判定2,急所判定2,0)    
+        ダメージ2 = RESULT:0
+        相性補正2 = RESULT:1
+        CALL POKEMON_BATTLE_OUTPUT(P_ID2, 前衛,バトルコマンドE,バトルコマンド,成功判定2,急所判定2,成功判定1,急所判定1,ダメージ2,ダメージ1,相性補正2,相性補正1)   
         バトルコマンドE = RESULT:0
         CLEARLINE LINECOUNT - FIRST_LINE
         GOTO SHOW_LOOP
@@ -212,8 +318,10 @@ ENDIF
 #DIM 相性補正4
 #DIM 無効化されない補助技の数
 #DIM 対象が味方の技
+#DIM 最大ダメージ
 
-前衛 = P_ID
+P_ID = 前衛
+バトルコマンドE = 0
 
 LOCAL:7 = 0
 LOCAL:8 = 0
@@ -242,6 +350,12 @@ LOCAL:31 = 0
 LOCAL:32 = 0
 LOCAL:33 = 0
 
+LOCAL:40 = 0
+LOCAL:41 = 0
+LOCAL:42 = 0
+LOCAL:43 = 0
+
+
 相性補正1 = 0
 相性補正2 = 0
 相性補正3 = 0
@@ -249,7 +363,7 @@ LOCAL:33 = 0
 
 補助技選択 = 0
 
-SIF RAND(100) >= 50
+SIF RAND(100) >= 60
     補助技選択 = 1
 
 ;技のタイプ
@@ -348,6 +462,32 @@ IF (対象が味方の技 + 無効化されない補助技の数) >= 1 && 補助
     IF バトルコマンドE == 0
         GOTO ATTACK_LOOP
     ENDIF
+ENDIF
+
+IF 補助技選択 != 1
+    CALL POKEMON_BATTLE_Calculator(P_ID2, P_ID,(LOCAL:30),1,0,0)
+    LOCAL:40 = RESULT:0
+    CALL POKEMON_BATTLE_Calculator(P_ID2, P_ID,(LOCAL:31),1,0,0)
+    LOCAL:41 = RESULT:0
+    CALL POKEMON_BATTLE_Calculator(P_ID2, P_ID,(LOCAL:32),1,0,0)
+    LOCAL:42 = RESULT:0
+    CALL POKEMON_BATTLE_Calculator(P_ID2, P_ID,(LOCAL:33),1,0,0)
+    LOCAL:43 = RESULT:0
+
+    最大ダメージ = MAX((LOCAL:40), (LOCAL:41), (LOCAL:42), (LOCAL:43))
+
+    IF 最大ダメージ == (LOCAL:40)
+        バトルコマンドE = ABL:P_ID2:技1
+    ELSEIF 最大ダメージ == (LOCAL:41)
+        バトルコマンドE = ABL:P_ID2:技2
+    ELSEIF 最大ダメージ == (LOCAL:42)
+        バトルコマンドE = ABL:P_ID2:技3
+    ELSEIF 最大ダメージ == (LOCAL:43)
+        バトルコマンドE = ABL:P_ID2:技4
+    ENDIF    
+
+    PRINTFORML この時の最大ダメージは{最大ダメージ}、技は%GET_POKEMON_ATTACKNAME(バトルコマンドE)%である。
+
 ENDIF
 
 RETURN バトルコマンドE
@@ -502,171 +642,6 @@ ENDIF
     ダメージ /= 100
 
 RETURN ダメージ,相性補正
-
-;@POKEMON_BATTLE_Calculator(P_ID, P_ID2,バトルコマンド,バトルコマンドE,成功判定1,急所判定1,成功判定2,急所判定2)
-;#DIM P_ID
-;#DIM P_ID2
-;#DIM バトルコマンド
-;#DIM バトルコマンドE
-;;0でなにもしない、もしくはわるあがき
-;#DIM 成功判定1
-;#DIM 成功判定2
-;;1=命中 2=回避
-;;1=急所
-;#DIM 急所判定1
-;#DIM 急所判定2
-;#DIM 分類1
-;#DIM 分類2
-;#DIM 威力1
-;#DIM 威力2
-;#DIM 攻撃タイプ1
-;#DIM 攻撃タイプ2
-;#DIM ダメージ1
-;#DIM ダメージ2
-;#DIM 相性補正1
-;#DIM 相性補正2
-;
-;ダメージ1 = 0
-;ダメージ2 = 0
-;
-;TRYCCALLFORM ATTACK_Class_P{バトルコマンド}(P_ID,P_ID2)
-;CATCH
-;ENDCATCH
-;分類1 = RESULT
-;TRYCCALLFORM ATTACK_Class_P{バトルコマンドE}(P_ID2,P_ID)
-;CATCH
-;ENDCATCH
-;分類2 = RESULT
-;TRYCCALLFORM ATTACK_Power_P{バトルコマンド}(P_ID,P_ID2)
-;CATCH
-;ENDCATCH
-;威力1 = RESULT
-;TRYCCALLFORM ATTACK_Power_P{バトルコマンドE}(P_ID2,P_ID)
-;CATCH
-;ENDCATCH
-;威力2 = RESULT
-;TRYCCALLFORM ATTACK_Type_P{バトルコマンド}(P_ID,P_ID2)
-;CATCH
-;ENDCATCH
-;攻撃タイプ1 = RESULT
-;TRYCCALLFORM ATTACK_Type_P{バトルコマンドE}(P_ID2,P_ID)
-;CATCH
-;ENDCATCH
-;攻撃タイプ2 = RESULT
-;
-;CALL TypeEFDamage(攻撃タイプ1,TALENT:P_ID2:タイプ1,TALENT:P_ID2:タイプ2)
-;相性補正1 = RESULT
-;
-;CALL TypeEFDamage(攻撃タイプ2,TALENT:P_ID:タイプ1,TALENT:P_ID:タイプ2)
-;相性補正2 = RESULT
-;
-;IF CFLAG:P_ID:P_攻撃補正 >= 0
-;    BASE:P_ID:P_攻撃 = (BASE:P_ID:P_攻撃 * (2+CFLAG:P_ID:P_攻撃補正) / 2)
-;ELSE
-;    BASE:P_ID:P_攻撃 = (BASE:P_ID:P_攻撃 * 2 / (2 - CFLAG:P_ID:P_攻撃補正))
-;ENDIF
-;IF CFLAG:P_ID:P_防御補正 >= 0
-;    BASE:P_ID:P_防御 = (BASE:P_ID:P_防御 * (2+CFLAG:P_ID:P_防御補正) / 2)
-;ELSE
-;    BASE:P_ID:P_防御 = (BASE:P_ID:P_防御 * 2 / (2 - CFLAG:P_ID:P_防御補正))
-;ENDIF
-;IF CFLAG:P_ID:P_特攻補正 >= 0
-;    BASE:P_ID:P_特攻 = (BASE:P_ID:P_特攻 * (2+CFLAG:P_ID:P_特攻補正) / 2)
-;ELSE
-;    BASE:P_ID:P_特攻 = (BASE:P_ID:P_特攻 * 2 / (2 - CFLAG:P_ID:P_特攻補正))
-;ENDIF
-;IF CFLAG:P_ID:P_特防補正 >= 0
-;    BASE:P_ID:P_特防 = (BASE:P_ID:P_特防 * (2+CFLAG:P_ID:P_特防補正) / 2)
-;ELSE
-;    BASE:P_ID:P_特防 = (BASE:P_ID:P_特防 * 2 / (2 - CFLAG:P_ID:P_特防補正))
-;ENDIF
-;IF CFLAG:P_ID:P_素早さ補正 >= 0
-;    BASE:P_ID:P_素早さ = (BASE:P_ID:P_素早さ * (2+CFLAG:P_ID:P_素早さ補正) / 2)
-;ELSE
-;    BASE:P_ID:P_素早さ = (BASE:P_ID:P_素早さ * 2 / (2 - CFLAG:P_ID:P_素早さ補正))
-;ENDIF
-;
-;IF CFLAG:P_ID2:P_攻撃補正 >= 0
-;    BASE:P_ID2:P_攻撃 = (BASE:P_ID2:P_攻撃 * (2+CFLAG:P_ID2:P_攻撃補正) / 2)
-;ELSE
-;    BASE:P_ID2:P_攻撃 = (BASE:P_ID2:P_攻撃 * 2 / (2 - CFLAG:P_ID2:P_攻撃補正))
-;ENDIF
-;IF CFLAG:P_ID2:P_防御補正 >= 0
-;    BASE:P_ID2:P_防御 = (BASE:P_ID2:P_防御 * (2+CFLAG:P_ID2:P_防御補正) / 2)
-;ELSE
-;    BASE:P_ID2:P_防御 = (BASE:P_ID2:P_防御 * 2 / (2 - CFLAG:P_ID2:P_防御補正))
-;ENDIF
-;IF CFLAG:P_ID2:P_特攻補正 >= 0
-;    BASE:P_ID2:P_特攻 = (BASE:P_ID2:P_特攻 * (2+CFLAG:P_ID2:P_特攻補正) / 2)
-;ELSE
-;    BASE:P_ID2:P_特攻 = (BASE:P_ID2:P_特攻 * 2 / (2 - CFLAG:P_ID2:P_特攻補正))
-;ENDIF
-;IF CFLAG:P_ID2:P_特防補正 >= 0
-;    BASE:P_ID2:P_特防 = (BASE:P_ID2:P_特防 * (2+CFLAG:P_ID2:P_特防補正) / 2)
-;ELSE
-;    BASE:P_ID2:P_特防 = (BASE:P_ID2:P_特防 * 2 / (2 - CFLAG:P_ID2:P_特防補正))
-;ENDIF
-;IF CFLAG:P_ID2:P_素早さ補正 >= 0
-;    BASE:P_ID2:P_素早さ = (BASE:P_ID2:P_素早さ * (2+CFLAG:P_ID2:P_素早さ補正) / 2)
-;ELSE
-;    BASE:P_ID2:P_素早さ = (BASE:P_ID2:P_素早さ * 2 / (2 - CFLAG:P_ID2:P_素早さ補正))
-;ENDIF
-;
-;
-;;ダメージ判定
-;IF 成功判定1 != 2 && 分類1 == 1 && 相性補正1 != -4
-;    ダメージ1 = (((((BASE:P_ID:ポケモンLV)*2 / 5 + 2) * 威力1) * (BASE:P_ID:P_攻撃)/(BASE:P_ID2:P_防御)) / 50 + 2)
-;ELSEIF 成功判定1 != 2 && 分類1 == 2 && 相性補正1 != -4
-;    ダメージ1 = (((((BASE:P_ID:ポケモンLV)*2 / 5 + 2) * 威力1) * (BASE:P_ID:P_特攻)/(BASE:P_ID2:P_特防)) / 50 + 2)
-;ENDIF
-;    IF 急所判定1 == 1
-;        ダメージ1 = (ダメージ1*15)/10
-;    ENDIF
-;    IF (TALENT:P_ID:タイプ1 == 攻撃タイプ1) || (TALENT:P_ID:タイプ2 == 攻撃タイプ1)
-;        ダメージ1 = (ダメージ1*15)/10
-;    ENDIF
-;    IF 相性補正1 == 1
-;        ダメージ1 *= 2
-;    ELSEIF 相性補正1 == 2
-;        ダメージ1 *= 4 
-;    ELSEIF 相性補正1 == -1
-;        ダメージ1 /= 2
-;    ELSEIF 相性補正1 == -2
-;        ダメージ1 /= 4
-;    ELSEIF 相性補正1 == -4    
-;        ダメージ1 = 0
-;    ENDIF
-;    ダメージ1 *= RAND(85,101)
-;    ダメージ1 /= 100
-;
-;
-;IF 成功判定2 != 2 && 分類2 == 1 && 相性補正2 != -4
-;    ダメージ2 = (((((BASE:P_ID2:ポケモンLV)*2 / 5 + 2) * 威力2) * (BASE:P_ID2:P_攻撃)/(BASE:P_ID:P_防御)) * 50 + 2)
-;ELSEIF 成功判定2 != 2 && 分類2 == 2 && 相性補正2 != -4
-;    ダメージ2 = (((((BASE:P_ID2:ポケモンLV)*2 / 5 + 2) * 威力2) * (BASE:P_ID2:P_特攻)/(BASE:P_ID:P_特防)) * 50 + 2)
-;ENDIF
-;    IF 急所判定2 == 1
-;        ダメージ2 = (ダメージ2*15)/10
-;    ENDIF
-;    IF (TALENT:P_ID2:タイプ2 == 攻撃タイプ2) || (TALENT:P_ID2:タイプ2 == 攻撃タイプ2)
-;        ダメージ2 = (ダメージ2*15)/10
-;    ENDIF
-;    IF 相性補正2 == 1
-;        ダメージ2 *= 2
-;    ELSEIF 相性補正2 == 2
-;        ダメージ2 *= 4 
-;    ELSEIF 相性補正2 == -1
-;        ダメージ2 /= 2
-;    ELSEIF 相性補正2 == -2
-;        ダメージ2 /= 4
-;    ELSEIF 相性補正2 == -4    
-;        ダメージ2 = 0
-;    ENDIF
-;    ダメージ2 *= RAND(85,101)
-;    ダメージ2 /= 100
-;
-;RETURN ダメージ1, ダメージ2,相性補正1,相性補正2
-
 
 @POKEMON_BATTLE_Judgement(P_ID, P_ID2,バトルコマンド)
 #DIM P_ID

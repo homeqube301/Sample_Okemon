@@ -269,12 +269,13 @@ ELSE
     GOTO INPUT_LOOP
 ENDIF
 
-@POKEMON_GET_EXPERIENCE(P_ID,P_ID2)
+@POKEMON_GET_EXPERIENCE(P_ID,P_ID2,半減機能)
 #DIM P_ID  ;自分のポケモン
 #DIM P_ID2 ;相手のポケモン
 #DIM P_EXP
 #DIM レベル補正
 #DIM レベル補正関係値
+#DIM 半減機能
 
 POWER レベル補正関係値, (100*((2 * BASE:P_ID2:ポケモンLV) + 10)/((BASE:P_ID2:ポケモンLV + BASE:P_ID:ポケモンLV)+10)), 2
 レベル補正 = (レベル補正関係値 * SQRT((100*((2 * BASE:P_ID2:ポケモンLV) + 10)/((BASE:P_ID2:ポケモンLV + BASE:P_ID:ポケモンLV)+10)))) / 10
@@ -283,7 +284,11 @@ POWER レベル補正関係値, (100*((2 * BASE:P_ID2:ポケモンLV) + 10)/((BA
 
 ;PRINTFORML レベル補正は{レベル補正}だよーん
 
-P_EXP = (((BASE:P_ID2:基礎経験値) * レベル補正)/20000 + 1)
+IF 半減機能 != 1
+	P_EXP = (((BASE:P_ID2:基礎経験値) * レベル補正)/20000 + 1)
+ELSE
+	P_EXP = ((((BASE:P_ID2:基礎経験値) / 2) * レベル補正)/20000 + 1)
+ENDIF
 
 BASE:P_ID:合計獲得経験値 += P_EXP
 PRINTFORML 　%CALLNAME:P_ID%は{P_EXP}の経験値を得た
